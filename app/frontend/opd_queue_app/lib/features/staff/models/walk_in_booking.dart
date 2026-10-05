@@ -4,7 +4,7 @@ class WalkInBooking {
   final String patientPhone;
   final String doctorName;
   final String roomNumber;
-  final String status; // waiting, in_consultation, completed, absent, cancelled
+  final String status; // entered_opd, waiting_room, in_consultation, completed, absent, cancelled
   final DateTime createdAt;
 
   WalkInBooking({
@@ -13,7 +13,7 @@ class WalkInBooking {
     required this.patientPhone,
     required this.doctorName,
     required this.roomNumber,
-    this.status = 'waiting',
+    this.status = 'entered_opd',
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
