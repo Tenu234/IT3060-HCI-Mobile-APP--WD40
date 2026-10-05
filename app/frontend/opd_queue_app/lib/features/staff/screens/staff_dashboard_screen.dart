@@ -4,6 +4,7 @@ import '../models/walk_in_booking.dart';
 import 'walk_in_booking_screen.dart';
 import 'daily_register_screen.dart';
 import 'live_queue_screen.dart';
+import 'patient_status_update_screen.dart';
 
 class StaffDashboardScreen extends StatefulWidget {
   const StaffDashboardScreen({super.key});
@@ -142,6 +143,18 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                         context,
                         MaterialPageRoute(
                             builder: (_) => const LiveQueueScreen()),
+                      ).then((_) => _loadBookings()),
+                    ),
+                    const SizedBox(height: 12),
+                    _ActionCard(
+                      icon: Icons.update,
+                      label: 'Patient Turn Status',
+                      subtitle: 'Update patient status through consultation stages',
+                      color: const Color(0xFFC62828),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const PatientStatusUpdateScreen()),
                       ).then((_) => _loadBookings()),
                     ),
                   ],
