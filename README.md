@@ -48,7 +48,8 @@ Make sure you have these installed before setting up:
 - [Node.js](https://nodejs.org/) (v18 or above)
 - [MongoDB](https://www.mongodb.com/try/download/community) (local) or a MongoDB Atlas account
 - [Git](https://git-scm.com/)
-- [VS Code](https://code.visualstudio.com/) with Flutter & Dart extensions
+- [Android Studio](https://developer.android.com/studio) with Flutter & Dart plugins (recommended)
+- or [VS Code](https://code.visualstudio.com/) with Flutter & Dart extensions
 
 ---
 
