@@ -15,7 +15,8 @@ class _LiveQueueScreenState extends State<LiveQueueScreen> {
   bool _isLoading = true;
 
   final List<String> _statuses = [
-    'waiting',
+    'entered_opd',
+    'waiting_room',
     'in_consultation',
     'completed',
     'absent',
@@ -34,7 +35,10 @@ class _LiveQueueScreenState extends State<LiveQueueScreen> {
     setState(() {
       // show only active patients (not completed/cancelled)
       _queue = bookings
-          .where((b) => b.status != 'completed' && b.status != 'cancelled')
+          .where((b) =>
+              b.status != 'completed' &&
+              b.status != 'cancelled' &&
+              b.status != 'absent')
           .toList();
       _isLoading = false;
     });
@@ -118,7 +122,9 @@ class _LiveQueueScreenState extends State<LiveQueueScreen> {
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'waiting':
+      case 'entered_opd':
+        return Colors.teal;
+      case 'waiting_room':
         return Colors.orange;
       case 'in_consultation':
         return Colors.blue;
@@ -131,7 +137,9 @@ class _LiveQueueScreenState extends State<LiveQueueScreen> {
 
   IconData _statusIcon(String status) {
     switch (status) {
-      case 'waiting':
+      case 'entered_opd':
+        return Icons.login;
+      case 'waiting_room':
         return Icons.hourglass_empty;
       case 'in_consultation':
         return Icons.medical_services;
