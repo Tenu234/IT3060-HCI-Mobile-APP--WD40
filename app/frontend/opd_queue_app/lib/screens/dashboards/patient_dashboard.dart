@@ -153,6 +153,23 @@ class _PatientDashboardState extends State<PatientDashboard> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.wifi_off_outlined, size: 48, color: Colors.grey),
+                            const SizedBox(height: 12),
+                            const Text('Could not load appointments.',
+                                style: TextStyle(color: Colors.grey)),
+                            const SizedBox(height: 12),
+                            TextButton(onPressed: _reload, child: const Text('Retry')),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
                   final appointments = snapshot.data ?? [];
 
                   // Stats row
