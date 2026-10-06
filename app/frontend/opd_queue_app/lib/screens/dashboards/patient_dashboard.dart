@@ -30,6 +30,26 @@ class _PatientDashboardState extends State<PatientDashboard> {
     });
   }
 
+  Widget _statChip(String label, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Text('$count',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+            Text(label, style: TextStyle(fontSize: 11, color: color)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Color _statusColor(String status) {
     switch (status) {
       case 'upcoming':   return Colors.teal;
@@ -134,45 +154,67 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   final appointments = snapshot.data ?? [];
-                  if (appointments.isEmpty) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Text('No appointments yet.'),
-                      ),
-                    );
-                  }
-                  return ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: appointments.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, i) {
-                      final apt = appointments[i];
-                      return Card(
-                        elevation: 1,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          title: Text(apt.opdName,
-                              style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text('${apt.hospitalName}\n${apt.date}  •  ${apt.timeSlot}'),
-                          isThreeLine: true,
-                          trailing: Chip(
-                            label: Text(apt.status.toUpperCase(),
-                                style: const TextStyle(color: Colors.white, fontSize: 11)),
-                            backgroundColor: _statusColor(apt.status),
-                            padding: EdgeInsets.zero,
+
+                  // Stats row
+                  final upcoming  = appointments.where((a) => a.status == 'upcoming').length;
+                  final completed = appointments.where((a) => a.status == 'completed').length;
+                  final cancelled = appointments.where((a) => a.status == 'cancelled').length;
+
+                  return Column(
+                    children: [
+                      if (appointments.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            _statChip('Upcoming',  upcoming,  Colors.teal),
+                            const SizedBox(width: 8),
+                            _statChip('Completed', completed, Colors.grey),
+                            const SizedBox(width: 8),
+                            _statChip('Cancelled', cancelled, Colors.red),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      if (appointments.isEmpty)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: Text('No appointments yet.'),
                           ),
-                          onTap: () async {
-                            await Navigator.push(context, MaterialPageRoute(
-                              builder: (_) => AppointmentDetailScreen(appointment: apt),
-                            ));
-                            _reload();
+                        )
+                      else
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: appointments.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          itemBuilder: (context, i) {
+                            final apt = appointments[i];
+                            return Card(
+                              elevation: 1,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                title: Text(apt.opdName,
+                                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                                subtitle: Text('${apt.hospitalName}\n${apt.date}  •  ${apt.timeSlot}'),
+                                isThreeLine: true,
+                                trailing: Chip(
+                                  label: Text(apt.status.toUpperCase(),
+                                      style: const TextStyle(color: Colors.white, fontSize: 11)),
+                                  backgroundColor: _statusColor(apt.status),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                onTap: () async {
+                                  await Navigator.push(context, MaterialPageRoute(
+                                    builder: (_) => AppointmentDetailScreen(appointment: apt),
+                                  ));
+                                  _reload();
+                                },
+                              ),
+                            );
                           },
                         ),
-                      );
-                    },
+                    ],
                   );
                 },
               ),
