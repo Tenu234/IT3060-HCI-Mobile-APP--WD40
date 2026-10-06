@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
-import 'appointment_service.dart';
+import '../patient/services/appointment_service.dart';
 
 class AuthService {
   // Toggle this to false when your backend is ready, then set _baseUrl
