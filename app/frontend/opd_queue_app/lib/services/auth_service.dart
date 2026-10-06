@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
+import 'appointment_service.dart';
 
 class AuthService {
   // Toggle this to false when your backend is ready, then set _baseUrl
-  static const bool _useMock = true;
-  static const String _baseUrl = 'http://10.0.2.2:5000/api'; // Android emulator → localhost
+  static const bool _useMock = false;
+  static const String _baseUrl = 'http://localhost:5000/api'; // web/desktop
+  // For Android emulator use: 'http://10.0.2.2:5000/api'
 
   // ─── Mock users for testing all 4 roles ───────────────────────────────────
   static final List<Map<String, String>> _mockUsers = [
@@ -27,15 +31,19 @@ class AuthService {
     }
 
     // ── Real API call (uncomment when backend is ready) ──
-    // final response = await http.post(
-    //   Uri.parse('$_baseUrl/auth/login'),
-    //   headers: {'Content-Type': 'application/json'},
-    //   body: jsonEncode({'email': email, 'password': password}),
-    // );
-    // final data = jsonDecode(response.body);
-    // if (response.statusCode == 200) return UserModel.fromJson(data);
-    // throw Exception(data['message'] ?? 'Login failed.');
-    throw Exception('Backend not configured.');
+    final response = await http.post(
+      Uri.parse('$_baseUrl/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final user = UserModel.fromJson(data);
+      AppointmentService.setToken(user.token); // store token for API calls
+      return user;
+    }
+    throw Exception(data['message'] ?? 'Login failed.');
+    // throw Exception('Backend not configured.');
   }
 
   static Future<UserModel> registerUser({
@@ -64,14 +72,14 @@ class AuthService {
     }
 
     // ── Real API call (uncomment when backend is ready) ──
-    // final response = await http.post(
-    //   Uri.parse('$_baseUrl/auth/register'),
-    //   headers: {'Content-Type': 'application/json'},
-    //   body: jsonEncode({'name': name, 'email': email, 'password': password, 'phone': phone, 'nic': nic, 'role': role}),
-    // );
-    // final data = jsonDecode(response.body);
-    // if (response.statusCode == 201) return UserModel.fromJson(data);
-    // throw Exception(data['message'] ?? 'Registration failed.');
-    throw Exception('Backend not configured.');
+    final response = await http.post(
+      Uri.parse('$_baseUrl/auth/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': name, 'email': email, 'password': password, 'phone': phone, 'nic': nic, 'role': role}),
+    );
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 201) return UserModel.fromJson(data);
+    throw Exception(data['message'] ?? 'Registration failed.');
+    // throw Exception('Backend not configured.');
   }
 }
