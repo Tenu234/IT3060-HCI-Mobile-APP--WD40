@@ -46,8 +46,11 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
         // staff / nurse role → staff dashboard
         dashboard = const StaffDashboardScreen();
     }
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (_) => dashboard));
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => dashboard),
+      (route) => false,
+    );
   }
 
   Future<void> _handleLogin() async {

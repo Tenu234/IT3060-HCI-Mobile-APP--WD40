@@ -53,9 +53,10 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
             ),
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.pushReplacement(
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
               );
             },
             child: const Text('Logout Session'),
@@ -79,14 +80,21 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
       const DoctorReportsScreen(),
     ];
 
-    return Scaffold(
-      backgroundColor: DoctorTheme.background,
-      appBar: AppBar(
-        backgroundColor: DoctorTheme.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        titleSpacing: 16,
-        title: Row(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _onLogout();
+      },
+      child: Scaffold(
+        backgroundColor: DoctorTheme.background,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: DoctorTheme.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          titleSpacing: 16,
+          title: Row(
           children: [
             // Doctor Avatar Circle
             Container(
@@ -185,6 +193,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }

@@ -67,8 +67,11 @@ class _LoginScreenState extends State<LoginScreen>
       default:
         dashboard = PatientDashboard(user: user);
     }
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (_) => dashboard));
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => dashboard),
+      (route) => false,
+    );
   }
 
   Future<void> _handleLogin() async {
