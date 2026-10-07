@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+const bookingRoutes = require('./routes/bookingRoutes');
 const authRoutes = require('./routes/auth.routes');
 const appointmentRoutes = require('./routes/appointment.routes');
 const doctorRoutes = require('./routes/doctor.routes');
@@ -15,6 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use('/api/bookings', bookingRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/doctor', doctorRoutes);
