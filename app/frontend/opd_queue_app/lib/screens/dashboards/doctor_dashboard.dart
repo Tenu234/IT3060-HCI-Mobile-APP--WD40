@@ -67,13 +67,17 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final doctorName = widget.user.name.isNotEmpty ? widget.user.name : 'Dr. RKAM Deshan';
+
     final screens = [
-      DoctorQueueScreen(onQueueUpdated: () => setState(() {})),
+      DoctorQueueScreen(
+        doctorName: doctorName,
+        onNavigateTab: (idx) => setState(() => _currentIndex = idx),
+        onQueueUpdated: () => setState(() {}),
+      ),
       const ConsultationNotesAndDispatchScreen(),
       const DoctorReportsScreen(),
     ];
-
-    final doctorName = widget.user.name.isNotEmpty ? widget.user.name : 'Dr. RKAM Deshan';
 
     return Scaffold(
       backgroundColor: DoctorTheme.background,
