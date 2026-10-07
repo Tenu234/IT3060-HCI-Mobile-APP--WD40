@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
 import '../patient/services/appointment_service.dart';
@@ -6,8 +8,11 @@ import '../patient/services/appointment_service.dart';
 class AuthService {
   // Toggle this to false when your backend is ready, then set _baseUrl
   static const bool _useMock = false;
-  static const String _baseUrl = 'http://localhost:5000/api'; // web/desktop
-  // For Android emulator use: 'http://10.0.2.2:5000/api'
+  static String get _baseUrl {
+    if (kIsWeb) return 'http://localhost:5000/api';
+    if (Platform.isAndroid) return 'http://10.0.2.2:5000/api';
+    return 'http://localhost:5000/api';
+  }
 
   // ─── Mock users for testing all 4 roles ───────────────────────────────────
   static final List<Map<String, String>> _mockUsers = [

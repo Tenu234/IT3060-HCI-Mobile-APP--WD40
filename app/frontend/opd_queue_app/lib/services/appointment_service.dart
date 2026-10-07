@@ -1,9 +1,15 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../models/appointment_model.dart';
 
 class AppointmentService {
-  static const String _baseUrl = 'http://localhost:5000/api/appointments';
+  static String get _baseUrl {
+    if (kIsWeb) return 'http://localhost:5000/api/appointments';
+    if (Platform.isAndroid) return 'http://10.0.2.2:5000/api/appointments';
+    return 'http://localhost:5000/api/appointments';
+  }
 
   static String? _token; // set this after login
 

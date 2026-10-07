@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/doctor_queue_item.dart';
@@ -9,6 +10,7 @@ class DoctorService {
   // Support both Windows/Web desktop and Android emulator
   static String get _baseUrl {
     if (kIsWeb) return 'http://localhost:5000/api/doctor';
+    if (Platform.isAndroid) return 'http://10.0.2.2:5000/api/doctor';
     return 'http://localhost:5000/api/doctor';
   }
 
