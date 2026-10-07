@@ -575,18 +575,22 @@ class _ConsultationNotesAndDispatchScreenState
                     ),
                     onSelected: (val) => setState(() => _selectedPriority = 'urgent'),
                   ),
-                  const Spacer(),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    onPressed: _dispatchAlert,
-                    icon: const Icon(Icons.campaign, size: 20),
-                    label: const Text('Broadcast Call'),
-                  ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: _dispatchAlert,
+                  icon: const Icon(Icons.campaign, size: 20),
+                  label: const Text('Broadcast Call'),
+                ),
               ),
             ],
           ),
