@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/doctor_queue_item.dart';
 import '../../services/doctor_service.dart';
+import 'doctor_theme.dart';
 import 'consultation_notes_and_dispatch_screen.dart';
 
 class DoctorQueueScreen extends StatefulWidget {
@@ -14,7 +15,7 @@ class DoctorQueueScreen extends StatefulWidget {
 class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
   List<DoctorQueueItem> _queue = [];
   bool _isLoading = true;
-  String _selectedFilter = 'all'; // all, waiting, in_consultation, skipped
+  String _selectedFilter = 'all'; // all, waiting, skipped
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   String _currentRoom = 'Consultation Room 2';
@@ -48,7 +49,11 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading queue: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error loading queue: $e'),
+            backgroundColor: DoctorTheme.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -65,8 +70,21 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('📢 Token ${patient.tokenNumber} (${patient.patientName}) called into $_currentRoom'),
-            backgroundColor: Colors.teal,
+            content: Row(
+              children: [
+                const Icon(Icons.campaign_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Called Token ${patient.tokenNumber} (${patient.patientName}) to $_currentRoom',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: DoctorTheme.primary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -76,7 +94,11 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: DoctorTheme.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -89,8 +111,10 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Consultation completed for ${patient.tokenNumber}'),
-            backgroundColor: Colors.green,
+            content: Text('Consultation completed for ${patient.tokenNumber}'),
+            backgroundColor: DoctorTheme.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
         );
         _loadQueue();
@@ -99,7 +123,7 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: DoctorTheme.danger),
         );
       }
     }
@@ -110,16 +134,31 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Dismiss / Skip Patient?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.person_off_rounded, color: DoctorTheme.warning, size: 22),
+            SizedBox(width: 8),
+            Text('Dismiss Patient?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
         content: Text(
-          'Mark ${patient.tokenNumber} (${patient.patientName}) as absent/skipped from active queue?',
+          'Mark ${patient.tokenNumber} (${patient.patientName}) as absent / skipped from immediate queue?',
+          style: const TextStyle(color: DoctorTheme.textSecondary),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: DoctorTheme.textSecondary)),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: DoctorTheme.warning,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Skip Patient', style: TextStyle(color: Colors.white)),
+            child: const Text('Skip Patient'),
           ),
         ],
       ),
@@ -132,8 +171,9 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Patient ${patient.tokenNumber} moved to skipped list.'),
-            backgroundColor: Colors.orange,
+            content: Text('${patient.tokenNumber} moved to skipped list.'),
+            backgroundColor: DoctorTheme.warning,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         _loadQueue();
@@ -142,7 +182,7 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: DoctorTheme.danger),
         );
       }
     }
@@ -155,8 +195,9 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Patient ${patient.tokenNumber} recalled to waiting queue.'),
-            backgroundColor: Colors.blue,
+            content: Text('${patient.tokenNumber} recalled to waiting queue.'),
+            backgroundColor: DoctorTheme.info,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         _loadQueue();
@@ -165,7 +206,7 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: DoctorTheme.danger),
         );
       }
     }
@@ -189,18 +230,19 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
     final waitingList = _queue.where((p) => p.status != 'in_consultation').toList();
 
     return RefreshIndicator(
+      color: DoctorTheme.primary,
       onRefresh: _loadQueue,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         children: [
-          // Room & Doctor Banner
+          // Room & Status Header
           _buildRoomHeader(),
           const SizedBox(height: 16),
 
           // Prominent "NOW SERVING" Active Card (HCI Key Visibility)
           if (activePatient != null) ...[
             _buildActiveConsultationCard(activePatient),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
           ],
 
           // Search and Filter Bar
@@ -213,20 +255,39 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
             children: [
               Text(
                 'Waiting Queue (${waitingList.length})',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              if (_selectedFilter == 'all')
-                Text(
-                  'Total: ${_queue.length}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: DoctorTheme.textPrimary,
                 ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: DoctorTheme.primaryTint,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Total: ${_queue.length}',
+                  style: const TextStyle(
+                    color: DoctorTheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
 
           // Queue Items List
           if (_isLoading)
-            const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(color: DoctorTheme.primary),
+              ),
+            )
           else if (waitingList.isEmpty)
             _buildEmptyQueueState()
           else
@@ -240,35 +301,46 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.teal.shade700, Colors.teal.shade500],
+        gradient: const LinearGradient(
+          colors: [DoctorTheme.primary, Color(0xFF236E7F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.teal.withValues(alpha: 0.3),
-            blurRadius: 10,
+            color: DoctorTheme.primary.withValues(alpha: 0.25),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.meeting_room_outlined, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.meeting_room, color: Colors.white, size: 24),
-                  const SizedBox(width: 8),
                   DropdownButton<String>(
                     value: _currentRoom,
-                    dropdownColor: Colors.teal.shade800,
+                    dropdownColor: DoctorTheme.primaryDark,
                     icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                     underline: const SizedBox(),
                     items: const [
                       DropdownMenuItem(value: 'Consultation Room 1', child: Text('Room 1')),
@@ -279,28 +351,31 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
                       if (val != null) setState(() => _currentRoom = val);
                     },
                   ),
+                  const Text(
+                    'General OPD • Live Consultation',
+                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
                 ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  children: [
-                    CircleAvatar(radius: 4, backgroundColor: Colors.greenAccent),
-                    SizedBox(width: 6),
-                    Text('ON DUTY', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ],
-                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'General OPD • Today\'s Live Queue',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+            ),
+            child: const Row(
+              children: [
+                CircleAvatar(radius: 4, backgroundColor: Color(0xFF34D399)),
+                SizedBox(width: 6),
+                Text(
+                  'IN SESSION',
+                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -309,37 +384,30 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
 
   Widget _buildActiveConsultationCard(DoctorQueueItem patient) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.teal.shade300, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.teal.withValues(alpha: 0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      decoration: DoctorTheme.cardDecoration(
+        borderColor: DoctorTheme.primaryLight,
+        bgColor: Colors.white,
       ),
       child: Column(
         children: [
+          // Banner Top
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.teal.shade50,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            decoration: const BoxDecoration(
+              color: DoctorTheme.primaryTint,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Icon(Icons.person_pin_circle, color: Colors.teal, size: 22),
-                    const SizedBox(width: 8),
+                    Icon(Icons.person_pin_circle_rounded, color: DoctorTheme.primary, size: 20),
+                    SizedBox(width: 8),
                     Text(
-                      'CURRENTLY IN ROOM ($_currentRoom)',
+                      'CURRENTLY IN CONSULTATION',
                       style: TextStyle(
-                        color: Colors.teal.shade800,
+                        color: DoctorTheme.primaryDark,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                         letterSpacing: 0.5,
@@ -350,17 +418,18 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.teal,
+                    color: DoctorTheme.primary,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text(
-                    'IN CONSULTATION',
+                    'ACTIVE',
                     style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
           ),
+
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -370,17 +439,18 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
                   children: [
                     // Big Token Badge
                     Container(
-                      width: 64,
-                      height: 64,
+                      width: 62,
+                      height: 62,
                       decoration: BoxDecoration(
-                        color: Colors.teal.shade100,
+                        color: DoctorTheme.primaryTint,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: DoctorTheme.primaryLight.withValues(alpha: 0.4)),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         patient.tokenNumber,
-                        style: TextStyle(
-                          color: Colors.teal.shade900,
+                        style: const TextStyle(
+                          color: DoctorTheme.primaryDark,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -393,20 +463,41 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
                         children: [
                           Text(
                             patient.patientName,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: DoctorTheme.textPrimary,
+                            ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           if (patient.patientPhone != null)
-                            Text(
-                              'Phone: ${patient.patientPhone}',
-                              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                            Row(
+                              children: [
+                                const Icon(Icons.phone_outlined, size: 13, color: DoctorTheme.textMuted),
+                                const SizedBox(width: 4),
+                                Text(
+                                  patient.patientPhone!,
+                                  style: const TextStyle(color: DoctorTheme.textSecondary, fontSize: 12),
+                                ),
+                              ],
                             ),
                           if (patient.symptoms.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Symptoms: "${patient.symptoms}"',
-                                style: const TextStyle(color: Colors.black87, fontStyle: FontStyle.italic, fontSize: 13),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: DoctorTheme.surfaceSubtle,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'Complaint: "${patient.symptoms}"',
+                                  style: const TextStyle(
+                                    color: DoctorTheme.textSecondary,
+                                    fontStyle: FontStyle.italic,
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ),
                             ),
                         ],
@@ -414,34 +505,39 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
                     ),
                   ],
                 ),
-                const Divider(height: 24),
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: DoctorTheme.border),
+                const SizedBox(height: 14),
+
+                // Action Buttons
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.teal,
-                          side: const BorderSide(color: Colors.teal),
+                          foregroundColor: DoctorTheme.primary,
+                          side: const BorderSide(color: DoctorTheme.primary, width: 1.2),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         onPressed: () => _openConsultationNotes(patient),
-                        icon: const Icon(Icons.edit_note, size: 20),
-                        label: const Text('Add Notes / Rx'),
+                        icon: const Icon(Icons.edit_note_rounded, size: 19),
+                        label: const Text('Add Notes / Rx', style: TextStyle(fontWeight: FontWeight.w600)),
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade600,
+                          backgroundColor: DoctorTheme.success,
                           foregroundColor: Colors.white,
+                          elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         onPressed: () => _completeConsultation(patient),
-                        icon: const Icon(Icons.check_circle_outline, size: 20),
-                        label: const Text('Complete Turn'),
+                        icon: const Icon(Icons.check_circle_outline_rounded, size: 19),
+                        label: const Text('Complete Turn', style: TextStyle(fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ],
@@ -457,34 +553,37 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
   Widget _buildSearchAndFilters() {
     return Column(
       children: [
-        // Search bar
-        TextField(
-          controller: _searchController,
-          decoration: InputDecoration(
-            hintText: 'Search by Token or Patient name...',
-            prefixIcon: const Icon(Icons.search, size: 20),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                      _loadQueue();
-                    },
-                  )
-                : null,
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
+        // Modern Search input
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: DoctorTheme.border),
           ),
-          onSubmitted: (val) {
-            setState(() => _searchQuery = val);
-            _loadQueue();
-          },
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search token or patient name...',
+              hintStyle: const TextStyle(color: DoctorTheme.textMuted, fontSize: 13),
+              prefixIcon: const Icon(Icons.search_rounded, color: DoctorTheme.textMuted, size: 20),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18, color: DoctorTheme.textMuted),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                        _loadQueue();
+                      },
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            ),
+            onSubmitted: (val) {
+              setState(() => _searchQuery = val);
+              _loadQueue();
+            },
+          ),
         ),
         const SizedBox(height: 10),
 
@@ -493,8 +592,8 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildFilterChip('all', 'All Patients'),
-              _buildFilterChip('waiting', 'Waiting Only'),
+              _buildFilterChip('all', 'All Active Patients'),
+              _buildFilterChip('waiting', 'Waiting Queue'),
               _buildFilterChip('skipped', 'Skipped / Absent'),
             ],
           ),
@@ -511,12 +610,15 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
         selected: isSelected,
         label: Text(label),
         labelStyle: TextStyle(
-          color: isSelected ? Colors.white : Colors.black87,
+          color: isSelected ? Colors.white : DoctorTheme.textSecondary,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           fontSize: 12,
         ),
-        backgroundColor: Colors.grey.shade200,
-        selectedColor: Colors.teal,
+        backgroundColor: Colors.white,
+        selectedColor: DoctorTheme.primary,
+        side: BorderSide(
+          color: isSelected ? DoctorTheme.primary : DoctorTheme.border,
+        ),
         showCheckmark: false,
         onSelected: (selected) {
           setState(() => _selectedFilter = value);
@@ -530,10 +632,11 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
     final isSkipped = item.status == 'skipped';
     final isWaiting = item.status == 'waiting' || item.status == 'upcoming';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: DoctorTheme.cardDecoration(
+        borderColor: isSkipped ? DoctorTheme.warning.withValues(alpha: 0.3) : DoctorTheme.border,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -545,17 +648,17 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isSkipped ? Colors.orange.shade100 : Colors.teal.shade50,
+                    color: isSkipped ? DoctorTheme.warningLight : DoctorTheme.primaryTint,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isSkipped ? Colors.orange : Colors.teal.shade300,
-                      width: 1.5,
+                      color: isSkipped ? DoctorTheme.warning : DoctorTheme.primaryLight.withValues(alpha: 0.5),
+                      width: 1.2,
                     ),
                   ),
                   child: Text(
                     item.tokenNumber,
                     style: TextStyle(
-                      color: isSkipped ? Colors.orange.shade900 : Colors.teal.shade900,
+                      color: isSkipped ? const Color(0xFF92400E) : DoctorTheme.primaryDark,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -568,22 +671,26 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
                     children: [
                       Text(
                         item.patientName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: DoctorTheme.textPrimary,
+                        ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Row(
                         children: [
-                          Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                          const Icon(Icons.access_time_rounded, size: 13, color: DoctorTheme.textMuted),
                           const SizedBox(width: 4),
                           Text(
                             item.timeSlot,
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            style: const TextStyle(color: DoctorTheme.textSecondary, fontSize: 12),
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: isSkipped ? Colors.orange.shade50 : Colors.blue.shade50,
+                              color: isSkipped ? DoctorTheme.warningLight : DoctorTheme.infoLight,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -591,7 +698,7 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: isSkipped ? Colors.orange.shade800 : Colors.blue.shade800,
+                                color: isSkipped ? const Color(0xFF92400E) : DoctorTheme.info,
                               ),
                             ),
                           ),
@@ -606,49 +713,60 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
               const SizedBox(height: 10),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: DoctorTheme.surfaceSubtle,
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: DoctorTheme.border.withValues(alpha: 0.6)),
                 ),
                 child: Text(
-                  'Reason / Symptoms: ${item.symptoms}',
-                  style: TextStyle(color: Colors.grey[800], fontSize: 12),
+                  'Reason: ${item.symptoms}',
+                  style: const TextStyle(color: DoctorTheme.textSecondary, fontSize: 12),
                 ),
               ),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
+
             // Action Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (isSkipped) ...[
                   TextButton.icon(
-                    style: TextButton.styleFrom(foregroundColor: Colors.blue),
+                    style: TextButton.styleFrom(
+                      foregroundColor: DoctorTheme.info,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    ),
                     onPressed: () => _recallPatient(item),
-                    icon: const Icon(Icons.replay, size: 18),
-                    label: const Text('Recall to Queue'),
+                    icon: const Icon(Icons.replay_rounded, size: 17),
+                    label: const Text('Recall to Queue', style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ] else if (isWaiting) ...[
                   // DELETE action in CRUD: Skip/Dismiss absent patient
-                  TextButton.icon(
-                    style: TextButton.styleFrom(foregroundColor: Colors.orange.shade800),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: DoctorTheme.warning,
+                      side: const BorderSide(color: DoctorTheme.warning),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    ),
                     onPressed: () => _skipPatient(item),
-                    icon: const Icon(Icons.person_off, size: 16),
-                    label: const Text('Skip / Absent'),
+                    icon: const Icon(Icons.person_off_rounded, size: 15),
+                    label: const Text('Skip / Absent', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                   ),
                   const SizedBox(width: 8),
                   // UPDATE action in CRUD: Call Next Patient
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
+                      backgroundColor: DoctorTheme.primary,
                       foregroundColor: Colors.white,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     ),
                     onPressed: () => _callPatient(item),
-                    icon: const Icon(Icons.campaign, size: 18),
-                    label: const Text('Call Patient'),
+                    icon: const Icon(Icons.campaign_rounded, size: 17),
+                    label: const Text('Call Patient', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ],
@@ -661,20 +779,27 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
 
   Widget _buildEmptyQueueState() {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(40),
       alignment: Alignment.center,
       child: Column(
         children: [
-          Icon(Icons.check_circle_outline, size: 56, color: Colors.teal.shade300),
-          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: DoctorTheme.primaryTint,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.done_all_rounded, size: 40, color: DoctorTheme.primary),
+          ),
+          const SizedBox(height: 14),
           const Text(
-            'No patients currently in this list',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            'Queue is Clear',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: DoctorTheme.textPrimary),
           ),
           const SizedBox(height: 4),
-          Text(
-            'Pull down to refresh or change the filter tab.',
-            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+          const Text(
+            'No patients waiting under this filter tab.',
+            style: TextStyle(color: DoctorTheme.textMuted, fontSize: 13),
           ),
         ],
       ),

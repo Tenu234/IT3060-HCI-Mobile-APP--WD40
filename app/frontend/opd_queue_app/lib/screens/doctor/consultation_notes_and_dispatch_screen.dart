@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/doctor_queue_item.dart';
 import '../../models/dispatch_alert_model.dart';
 import '../../services/doctor_service.dart';
+import 'doctor_theme.dart';
 
 class ConsultationNotesAndDispatchScreen extends StatefulWidget {
   final DoctorQueueItem? patientToConsult;
@@ -18,7 +19,7 @@ class _ConsultationNotesAndDispatchScreenState
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Consultation Notes Controllers (CRUD 1: Create / Update notes)
+  // Consultation Notes Controllers (CRUD 1)
   DoctorQueueItem? _selectedPatient;
   List<DoctorQueueItem> _activePatients = [];
   bool _isLoadingPatients = false;
@@ -28,25 +29,24 @@ class _ConsultationNotesAndDispatchScreenState
   final _prescriptionController = TextEditingController();
   bool _isSavingNotes = false;
 
-  // Common quick diagnoses for easy 1-tap entry (HCI usability heuristic)
+  // Quick diagnosis chips
   final List<String> _quickDiagnoses = [
     'Viral Pharyngitis',
     'Essential Hypertension',
     'Acute Bronchitis',
     'Gastritis / Acid Reflux',
-    'Lumbar Strain / Backache',
+    'Lumbar Back Strain',
     'Tension Headache',
     'Type 2 Diabetes Review',
   ];
 
-  // Dispatch Alerts State (CRUD 2: Notification & Alert Dispatch)
+  // Dispatch Alerts State (CRUD 2)
   List<DispatchAlertModel> _alerts = [];
   bool _isLoadingAlerts = false;
   final _tokenAlertController = TextEditingController();
   final _patientNameAlertController = TextEditingController();
   final _customMessageController = TextEditingController();
   String _selectedRoom = 'Consultation Room 2';
-  String _selectedAlertType = 'queue_call'; // queue_call, lab_dispatch, pharmacy, urgent_call
   String _selectedPriority = 'normal';
 
   @override
@@ -108,7 +108,7 @@ class _ConsultationNotesAndDispatchScreenState
     });
   }
 
-  // CRUD 1 - CREATE / UPDATE: Save clinical notes and diagnosis
+  // CRUD 1 - Save notes
   Future<void> _saveNotes({bool completeTurn = false}) async {
     if (_selectedPatient == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -121,7 +121,8 @@ class _ConsultationNotesAndDispatchScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a Diagnosis before completing the consultation.'),
-          backgroundColor: Colors.orange,
+          backgroundColor: DoctorTheme.warning,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
@@ -146,7 +147,8 @@ class _ConsultationNotesAndDispatchScreenState
                   ? 'Consultation for ${_selectedPatient!.tokenNumber} marked COMPLETED!'
                   : 'Clinical notes saved successfully.',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: DoctorTheme.success,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         if (completeTurn) {
@@ -159,13 +161,13 @@ class _ConsultationNotesAndDispatchScreenState
       if (mounted) {
         setState(() => _isSavingNotes = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: DoctorTheme.danger),
         );
       }
     }
   }
 
-  // CRUD 2 - READ: Load Notification & Alert Dispatch Logs
+  // CRUD 2 - Load Alerts
   Future<void> _loadAlerts() async {
     setState(() => _isLoadingAlerts = true);
     try {
@@ -181,12 +183,15 @@ class _ConsultationNotesAndDispatchScreenState
     }
   }
 
-  // CRUD 2 - CREATE: Trigger real-time queue call notifications ("Token A-104 enter Consultation Room 2")
+  // CRUD 2 - Dispatch Alert
   Future<void> _dispatchAlert() async {
     final token = _tokenAlertController.text.trim();
     if (token.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter or select a Token Number.')),
+        const SnackBar(
+          content: Text('Please enter or select a Token Number.'),
+          backgroundColor: DoctorTheme.warning,
+        ),
       );
       return;
     }
@@ -202,7 +207,7 @@ class _ConsultationNotesAndDispatchScreenState
         patientName: _patientNameAlertController.text.trim(),
         roomNumber: _selectedRoom,
         message: message,
-        alertType: _selectedAlertType,
+        alertType: 'queue_call',
         priority: _selectedPriority,
       );
 
@@ -210,8 +215,15 @@ class _ConsultationNotesAndDispatchScreenState
         _customMessageController.clear();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('📢 Alert Dispatched: "${created.message}"'),
-            backgroundColor: Colors.teal,
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Dispatched: "${created.message}"')),
+              ],
+            ),
+            backgroundColor: DoctorTheme.primary,
+            behavior: SnackBarBehavior.floating,
           ),
         );
         _loadAlerts();
@@ -219,13 +231,13 @@ class _ConsultationNotesAndDispatchScreenState
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: DoctorTheme.danger),
         );
       }
     }
   }
 
-  // CRUD 2 - DELETE: Clear or dismiss sent notification item
+  // CRUD 2 - Dismiss Alert
   Future<void> _dismissAlert(DispatchAlertModel alert) async {
     try {
       await DoctorService.deleteDispatchAlert(alert.id);
@@ -235,15 +247,16 @@ class _ConsultationNotesAndDispatchScreenState
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Dispatch notification dismissed.'),
+            content: Text('Notification dismissed.'),
             duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: DoctorTheme.danger),
         );
       }
     }
@@ -252,20 +265,29 @@ class _ConsultationNotesAndDispatchScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: DoctorTheme.background,
       appBar: AppBar(
-        title: const Text('Consultation & Dispatch Alerts'),
-        backgroundColor: Colors.teal,
+        title: const Text('Consultation & Dispatch Alerts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        backgroundColor: DoctorTheme.primary,
         foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(icon: Icon(Icons.description), text: 'Clinical Notes & Rx'),
-            Tab(icon: Icon(Icons.campaign), text: 'Dispatch Alerts (FR09)'),
-          ],
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: DoctorTheme.primary,
+              indicatorWeight: 3,
+              labelColor: DoctorTheme.primary,
+              unselectedLabelColor: DoctorTheme.textSecondary,
+              labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              tabs: const [
+                Tab(icon: Icon(Icons.description_outlined, size: 20), text: 'Clinical Notes & Rx'),
+                Tab(icon: Icon(Icons.campaign_outlined, size: 20), text: 'Dispatch Alerts (FR09)'),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
@@ -278,24 +300,22 @@ class _ConsultationNotesAndDispatchScreenState
     );
   }
 
-  // TAB 1: Clinical Notes, Diagnosis remarks, Prescription details
   Widget _buildClinicalNotesTab() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Patient Selection Dropdown / Selector
+        // Patient Selection Dropdown
         if (_isLoadingPatients)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
-            child: LinearProgressIndicator(),
+            child: LinearProgressIndicator(color: DoctorTheme.primary),
           )
         else if (_activePatients.isNotEmpty) ...[
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.teal.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.teal.shade200),
+            decoration: DoctorTheme.cardDecoration(
+              borderColor: DoctorTheme.primary.withValues(alpha: 0.3),
+              bgColor: Colors.white,
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
@@ -307,7 +327,7 @@ class _ConsultationNotesAndDispatchScreenState
                     value: p.id,
                     child: Text(
                       '${p.tokenNumber} - ${p.patientName} (${p.status.toUpperCase()})',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontWeight: FontWeight.w600, color: DoctorTheme.textPrimary),
                     ),
                   );
                 }).toList(),
@@ -318,23 +338,32 @@ class _ConsultationNotesAndDispatchScreenState
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
         ],
 
-        // Selected Patient Mini Banner
+        // Selected Patient Details Banner
         if (_selectedPatient != null)
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
+            padding: const EdgeInsets.all(14),
+            decoration: DoctorTheme.cardDecoration(
+              borderColor: DoctorTheme.border,
+              bgColor: Colors.white,
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  child: Text(_selectedPatient!.tokenNumber.replaceFirst('A-', '')),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: DoctorTheme.primaryTint,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: DoctorTheme.primaryLight.withValues(alpha: 0.4)),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    _selectedPatient!.tokenNumber,
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: DoctorTheme.primaryDark, fontSize: 13),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -343,12 +372,12 @@ class _ConsultationNotesAndDispatchScreenState
                     children: [
                       Text(
                         _selectedPatient!.patientName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: DoctorTheme.textPrimary),
                       ),
                       if (_selectedPatient!.symptoms.isNotEmpty)
                         Text(
-                          'Chief complaint: "${_selectedPatient!.symptoms}"',
-                          style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                          'Complaint: "${_selectedPatient!.symptoms}"',
+                          style: const TextStyle(color: DoctorTheme.textSecondary, fontSize: 12),
                         ),
                     ],
                   ),
@@ -356,27 +385,34 @@ class _ConsultationNotesAndDispatchScreenState
               ],
             ),
           ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
 
-        // 1. Diagnosis Field
+        // 1. Diagnosis
         const Text(
           'Diagnosis / Clinical Findings *',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DoctorTheme.textPrimary),
         ),
         const SizedBox(height: 6),
-        TextField(
-          controller: _diagnosisController,
-          decoration: InputDecoration(
-            hintText: 'e.g. Acute Viral Pharyngitis, Hypertension...',
-            prefixIcon: const Icon(Icons.medical_information, color: Colors.teal),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            filled: true,
-            fillColor: Colors.white,
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: DoctorTheme.border),
+          ),
+          child: TextField(
+            controller: _diagnosisController,
+            decoration: const InputDecoration(
+              hintText: 'e.g. Acute Viral Pharyngitis, Hypertension...',
+              hintStyle: TextStyle(color: DoctorTheme.textMuted, fontSize: 13),
+              prefixIcon: Icon(Icons.medical_information_outlined, color: DoctorTheme.primary, size: 20),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
           ),
         ),
         const SizedBox(height: 8),
 
-        // Quick Diagnoses Chips (HCI usability heuristic: Recognition over Recall)
+        // Quick Diagnoses Chips
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -384,8 +420,9 @@ class _ConsultationNotesAndDispatchScreenState
               return Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: ActionChip(
-                  label: Text(diag, style: const TextStyle(fontSize: 11)),
-                  backgroundColor: Colors.teal.shade50,
+                  label: Text(diag, style: const TextStyle(fontSize: 11, color: DoctorTheme.textPrimary)),
+                  backgroundColor: DoctorTheme.surfaceSubtle,
+                  side: const BorderSide(color: DoctorTheme.border),
                   onPressed: () {
                     setState(() => _diagnosisController.text = diag);
                   },
@@ -399,68 +436,84 @@ class _ConsultationNotesAndDispatchScreenState
         // 2. Clinical Observations & Notes
         const Text(
           'Clinical Notes / Examination Remarks',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DoctorTheme.textPrimary),
         ),
         const SizedBox(height: 6),
-        TextField(
-          controller: _clinicalNotesController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Enter clinical observations, vitals, temperature, BP...',
-            prefixIcon: const Icon(Icons.notes, color: Colors.teal),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            filled: true,
-            fillColor: Colors.white,
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: DoctorTheme.border),
+          ),
+          child: TextField(
+            controller: _clinicalNotesController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'Enter clinical observations, vitals, temperature, BP...',
+              hintStyle: TextStyle(color: DoctorTheme.textMuted, fontSize: 13),
+              prefixIcon: Icon(Icons.notes_rounded, color: DoctorTheme.primary, size: 20),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(12),
+            ),
           ),
         ),
         const SizedBox(height: 16),
 
-        // 3. Prescription & Dosage Details
+        // 3. Prescription & Medication Instructions
         const Text(
           'Prescription & Medication Instructions',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DoctorTheme.textPrimary),
         ),
         const SizedBox(height: 6),
-        TextField(
-          controller: _prescriptionController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'e.g. Tab Paracetamol 500mg TDS x 3 days\nAmoxicillin 500mg TDS x 5 days',
-            prefixIcon: const Icon(Icons.medication, color: Colors.teal),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            filled: true,
-            fillColor: Colors.white,
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: DoctorTheme.border),
+          ),
+          child: TextField(
+            controller: _prescriptionController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'e.g. Tab Paracetamol 500mg TDS x 3 days\nAmoxicillin 500mg TDS x 5 days',
+              hintStyle: TextStyle(color: DoctorTheme.textMuted, fontSize: 13),
+              prefixIcon: Icon(Icons.medication_outlined, color: DoctorTheme.primary, size: 20),
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.all(12),
+            ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 22),
 
-        // Action Buttons (Save vs Complete)
+        // Action Buttons
         Row(
           children: [
             Expanded(
               child: OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.teal,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  foregroundColor: DoctorTheme.primary,
+                  side: const BorderSide(color: DoctorTheme.primary),
+                  padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: _isSavingNotes ? null : () => _saveNotes(completeTurn: false),
-                icon: const Icon(Icons.save),
-                label: const Text('Save Notes Draft'),
+                icon: const Icon(Icons.save_outlined, size: 19),
+                label: const Text('Save Draft', style: TextStyle(fontWeight: FontWeight.w600)),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade600,
+                  backgroundColor: DoctorTheme.success,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: _isSavingNotes ? null : () => _saveNotes(completeTurn: true),
-                icon: const Icon(Icons.check_circle),
-                label: const Text('Save & Complete Turn'),
+                icon: const Icon(Icons.check_circle_outline_rounded, size: 19),
+                label: const Text('Save & Complete Turn', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -469,40 +522,31 @@ class _ConsultationNotesAndDispatchScreenState
     );
   }
 
-  // TAB 2: Notification & Alert Dispatch (FR09-FR10 CRUD)
   Widget _buildDispatchAlertsTab() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Quick Call & Dispatcher Card
+        // Dispatch Card
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.teal.shade200),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.teal.withValues(alpha: 0.08),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
+          decoration: DoctorTheme.cardDecoration(
+            borderColor: DoctorTheme.primaryLight.withValues(alpha: 0.4),
+            bgColor: Colors.white,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              const Row(
                 children: [
-                  const Icon(Icons.send_time_extension, color: Colors.teal),
-                  const SizedBox(width: 8),
-                  const Text(
+                  Icon(Icons.send_time_extension_rounded, color: DoctorTheme.primary, size: 20),
+                  SizedBox(width: 8),
+                  Text(
                     'Trigger Real-Time Queue Alert',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: DoctorTheme.textPrimary),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               Row(
                 children: [
@@ -514,12 +558,17 @@ class _ConsultationNotesAndDispatchScreenState
                       decoration: InputDecoration(
                         labelText: 'Token No.',
                         hintText: 'A-104',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        filled: true,
+                        fillColor: DoctorTheme.surfaceSubtle,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: DoctorTheme.border),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   // Room Dropdown
                   Expanded(
                     flex: 3,
@@ -527,8 +576,13 @@ class _ConsultationNotesAndDispatchScreenState
                       initialValue: _selectedRoom,
                       decoration: InputDecoration(
                         labelText: 'Destination Room',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        filled: true,
+                        fillColor: DoctorTheme.surfaceSubtle,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: DoctorTheme.border),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                       ),
                       items: const [
                         DropdownMenuItem(value: 'Consultation Room 1', child: Text('Room 1')),
@@ -545,57 +599,72 @@ class _ConsultationNotesAndDispatchScreenState
               ),
               const SizedBox(height: 10),
 
-              // Custom message (optional)
+              // Custom message
               TextField(
                 controller: _customMessageController,
                 decoration: InputDecoration(
-                  hintText: 'Custom message (e.g., Token A-104 enter Consultation Room 2)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  hintText: 'Custom message (e.g., Token A-104 enter Room 2)',
+                  filled: true,
+                  fillColor: DoctorTheme.surfaceSubtle,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: DoctorTheme.border),
+                  ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
-              // Priority toggle & Dispatch Button
+              // Priority toggle chips
               Row(
                 children: [
                   ChoiceChip(
                     label: const Text('Normal Alert'),
                     selected: _selectedPriority == 'normal',
-                    selectedColor: Colors.teal.shade100,
+                    selectedColor: DoctorTheme.primaryTint,
+                    labelStyle: TextStyle(
+                      color: _selectedPriority == 'normal' ? DoctorTheme.primaryDark : DoctorTheme.textSecondary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
                     onSelected: (val) => setState(() => _selectedPriority = 'normal'),
                   ),
                   const SizedBox(width: 8),
                   ChoiceChip(
                     label: const Text('Urgent Alert'),
                     selected: _selectedPriority == 'urgent',
-                    selectedColor: Colors.red.shade100,
+                    selectedColor: DoctorTheme.dangerLight,
                     labelStyle: TextStyle(
-                      color: _selectedPriority == 'urgent' ? Colors.red.shade900 : Colors.black87,
+                      color: _selectedPriority == 'urgent' ? DoctorTheme.danger : DoctorTheme.textSecondary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
                     ),
                     onSelected: (val) => setState(() => _selectedPriority = 'urgent'),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
+
+              // Full-width Broadcast Call Button (No Overflow!)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
+                    backgroundColor: DoctorTheme.primary,
                     foregroundColor: Colors.white,
+                    elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   onPressed: _dispatchAlert,
-                  icon: const Icon(Icons.campaign, size: 20),
-                  label: const Text('Broadcast Call'),
+                  icon: const Icon(Icons.campaign_rounded, size: 20),
+                  label: const Text('Broadcast Call (Dispatch)', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 22),
 
         // Dispatch Logs Section Header
         Row(
@@ -603,24 +672,24 @@ class _ConsultationNotesAndDispatchScreenState
           children: [
             Text(
               'Notification Dispatch Logs (${_alerts.length})',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: DoctorTheme.textPrimary),
             ),
             IconButton(
-              icon: const Icon(Icons.refresh, size: 20),
+              icon: const Icon(Icons.refresh_rounded, size: 20, color: DoctorTheme.primary),
               onPressed: _loadAlerts,
             ),
           ],
         ),
         const SizedBox(height: 8),
 
-        // Logs List (CRUD 2: READ & DELETE)
+        // Logs List
         if (_isLoadingAlerts)
-          const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()))
+          const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator(color: DoctorTheme.primary)))
         else if (_alerts.isEmpty)
           Center(
             child: Padding(
               padding: const EdgeInsets.all(32),
-              child: Text('No alert logs dispatched yet.', style: TextStyle(color: Colors.grey[600])),
+              child: Text('No alert logs dispatched yet.', style: TextStyle(color: DoctorTheme.textMuted)),
             ),
           )
         else
@@ -632,35 +701,37 @@ class _ConsultationNotesAndDispatchScreenState
   Widget _buildAlertLogItem(DispatchAlertModel alert) {
     final isUrgent = alert.priority == 'urgent';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      elevation: 0.8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isUrgent ? Colors.red.shade200 : Colors.grey.shade300,
-        ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: DoctorTheme.cardDecoration(
+        borderColor: isUrgent ? DoctorTheme.danger.withValues(alpha: 0.3) : DoctorTheme.border,
       ),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: isUrgent ? Colors.red.shade100 : Colors.teal.shade50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        leading: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: isUrgent ? DoctorTheme.dangerLight : DoctorTheme.primaryTint,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
           child: Icon(
-            isUrgent ? Icons.priority_high : Icons.notifications_active,
-            color: isUrgent ? Colors.red.shade800 : Colors.teal,
-            size: 20,
+            isUrgent ? Icons.priority_high_rounded : Icons.notifications_active_outlined,
+            color: isUrgent ? DoctorTheme.danger : DoctorTheme.primary,
+            size: 19,
           ),
         ),
         title: Text(
           alert.message,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: DoctorTheme.textPrimary),
         ),
         subtitle: Text(
           'Token: ${alert.tokenNumber} • ${_formatTime(alert.createdAt)}',
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          style: const TextStyle(fontSize: 11, color: DoctorTheme.textMuted),
         ),
-        // CRUD 2 - DELETE: Dismiss or delete sent alert item
         trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.grey),
+          icon: const Icon(Icons.delete_outline_rounded, color: DoctorTheme.textMuted, size: 20),
           tooltip: 'Dismiss / Clear Alert',
           onPressed: () => _dismissAlert(alert),
         ),

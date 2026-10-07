@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/doctor_summary_model.dart';
 import '../../models/doctor_queue_item.dart';
 import '../../services/doctor_service.dart';
+import 'doctor_theme.dart';
 
 class DoctorReportsScreen extends StatefulWidget {
   const DoctorReportsScreen({super.key});
@@ -42,7 +43,11 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading reports: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error loading reports: $e'),
+            backgroundColor: DoctorTheme.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -52,31 +57,45 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
         padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
           left: 20,
           right: 20,
           top: 20,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: DoctorTheme.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
             Row(
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade100,
+                    color: DoctorTheme.successLight,
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: DoctorTheme.success.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     patient.tokenNumber,
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green.shade900),
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: DoctorTheme.success),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -84,32 +103,43 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(patient.patientName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      Text('OPD Date: ${patient.date}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                      Text(
+                        patient.patientName,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: DoctorTheme.textPrimary),
+                      ),
+                      Text('Consultation Date: ${patient.date}', style: const TextStyle(color: DoctorTheme.textMuted, fontSize: 12)),
                     ],
                   ),
                 ),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: DoctorTheme.textMuted),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
               ],
             ),
-            const Divider(height: 24),
+            const Divider(height: 24, color: DoctorTheme.border),
 
             _buildDetailRow('Diagnosis:', patient.diagnosis.isEmpty ? 'Not specified' : patient.diagnosis, isBold: true),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             _buildDetailRow('Clinical Notes:', patient.clinicalNotes.isEmpty ? 'No notes entered' : patient.clinicalNotes),
-            const SizedBox(height: 10),
-            _buildDetailRow('Prescription:', patient.prescription.isEmpty ? 'No prescription' : patient.prescription),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
+            _buildDetailRow('Prescription & Advice:', patient.prescription.isEmpty ? 'No prescription recorded' : patient.prescription),
+            const SizedBox(height: 12),
             if (patient.symptoms.isNotEmpty)
-              _buildDetailRow('Initial Symptoms:', patient.symptoms),
+              _buildDetailRow('Initial Symptoms / Chief Complaint:', patient.symptoms),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: DoctorTheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Close Record', style: TextStyle(color: Colors.white)),
+                child: const Text('Close Record', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -122,11 +152,15 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.teal)),
-        const SizedBox(height: 2),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: DoctorTheme.primary)),
+        const SizedBox(height: 3),
         Text(
           content,
-          style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: DoctorTheme.textPrimary,
+          ),
         ),
       ],
     );
@@ -135,7 +169,7 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: DoctorTheme.primary));
     }
 
     final completedList = _summary?.completedList ?? [];
@@ -148,6 +182,7 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
     }).toList();
 
     return RefreshIndicator(
+      color: DoctorTheme.primary,
       onRefresh: _loadSummary,
       child: ListView(
         padding: const EdgeInsets.all(16),
@@ -155,9 +190,9 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
           // Section Title
           const Text(
             'Doctor Daily Performance & Summary',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: DoctorTheme.textPrimary),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
           // 4 Metric KPI Cards (Total, Completed, Waiting, Skipped)
           Row(
@@ -166,8 +201,9 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
                 child: _buildKpiCard(
                   'Total Patients',
                   '${_summary?.totalPatients ?? 0}',
-                  Icons.groups,
-                  Colors.blue,
+                  Icons.groups_outlined,
+                  DoctorTheme.primary,
+                  DoctorTheme.primaryTint,
                 ),
               ),
               const SizedBox(width: 10),
@@ -175,8 +211,9 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
                 child: _buildKpiCard(
                   'Completed (FR15)',
                   '${_summary?.completedCount ?? 0}',
-                  Icons.check_circle,
-                  Colors.green,
+                  Icons.check_circle_outline_rounded,
+                  DoctorTheme.success,
+                  DoctorTheme.successLight,
                 ),
               ),
             ],
@@ -188,8 +225,9 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
                 child: _buildKpiCard(
                   'In Queue / Waiting',
                   '${_summary?.waitingCount ?? 0}',
-                  Icons.hourglass_top,
-                  Colors.orange,
+                  Icons.hourglass_top_rounded,
+                  DoctorTheme.warning,
+                  DoctorTheme.warningLight,
                 ),
               ),
               const SizedBox(width: 10),
@@ -197,13 +235,14 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
                 child: _buildKpiCard(
                   'Skipped / Absent',
                   '${_summary?.skippedCount ?? 0}',
-                  Icons.person_off,
-                  Colors.red,
+                  Icons.person_off_outlined,
+                  DoctorTheme.danger,
+                  DoctorTheme.dangerLight,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
           // Completed Logs Header & Search
           Row(
@@ -211,40 +250,50 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
             children: [
               Text(
                 'Completed Logs (${filteredCompleted.length})',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: DoctorTheme.textPrimary),
               ),
-              Text(
-                'FR15 Completed Audit',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: DoctorTheme.surfaceSubtle,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text(
+                  'FR15 Audit',
+                  style: TextStyle(fontSize: 11, color: DoctorTheme.textMuted, fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 10),
 
           // Search Field
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Filter completed by token, name or diagnosis...',
-              prefixIcon: const Icon(Icons.search, size: 20),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: Colors.grey.shade100,
-              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: DoctorTheme.border),
             ),
-            onChanged: (val) => setState(() => _searchQuery = val),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Filter completed by token, name or diagnosis...',
+                hintStyle: const TextStyle(color: DoctorTheme.textMuted, fontSize: 13),
+                prefixIcon: const Icon(Icons.search_rounded, color: DoctorTheme.textMuted, size: 20),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18, color: DoctorTheme.textMuted),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              ),
+              onChanged: (val) => setState(() => _searchQuery = val),
+            ),
           ),
           const SizedBox(height: 12),
 
@@ -255,7 +304,7 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
                 padding: const EdgeInsets.all(32),
                 child: Text(
                   'No completed patient logs match your query.',
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(color: DoctorTheme.textMuted),
                 ),
               ),
             )
@@ -266,21 +315,29 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
     );
   }
 
-  Widget _buildKpiCard(String label, String value, IconData icon, Color color) {
+  Widget _buildKpiCard(String label, String value, IconData icon, Color color, Color bgTint) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+      decoration: DoctorTheme.cardDecoration(
+        borderColor: color.withValues(alpha: 0.25),
+        bgColor: bgTint,
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: color.withValues(alpha: 0.15),
-            foregroundColor: color,
-            radius: 20,
-            child: Icon(icon, size: 20),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.1),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: color, size: 18),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -289,11 +346,13 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
               children: [
                 Text(
                   value,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
                 ),
                 Text(
                   label,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 11, color: DoctorTheme.textSecondary, fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -304,48 +363,49 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
   }
 
   Widget _buildCompletedCard(DoctorQueueItem item) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      elevation: 0.8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: DoctorTheme.cardDecoration(
+        borderColor: DoctorTheme.border,
+      ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         leading: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.green.shade50,
+            color: DoctorTheme.successLight,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.green.shade300),
+            border: Border.all(color: DoctorTheme.success.withValues(alpha: 0.3)),
           ),
           child: Text(
             item.tokenNumber,
-            style: TextStyle(color: Colors.green.shade900, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: DoctorTheme.success, fontWeight: FontWeight.bold, fontSize: 13),
           ),
         ),
         title: Text(
           item.patientName,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: DoctorTheme.textPrimary),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 2),
             Text(
-              item.diagnosis.isNotEmpty ? 'Rx: ${item.diagnosis}' : 'Consultation finished',
-              style: TextStyle(color: Colors.grey[800], fontSize: 13),
+              item.diagnosis.isNotEmpty ? 'Rx: ${item.diagnosis}' : 'Consultation completed',
+              style: const TextStyle(color: DoctorTheme.textSecondary, fontSize: 12),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             if (item.prescription.isNotEmpty)
               Text(
                 'Meds: ${item.prescription}',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                style: const TextStyle(color: DoctorTheme.textMuted, fontSize: 11),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
           ],
         ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        trailing: const Icon(Icons.chevron_right_rounded, color: DoctorTheme.textMuted),
         onTap: () => _showCompletedDetailsModal(item),
       ),
     );
