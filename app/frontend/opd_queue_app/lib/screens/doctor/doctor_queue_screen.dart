@@ -668,7 +668,7 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
             ),
           ),
 
-          // Right Artwork: Doctor badge illustration
+          // Right Artwork: Doctor lady portrait avatar
           Expanded(
             flex: 4,
             child: Container(
@@ -678,24 +678,30 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
                 alignment: Alignment.center,
                 children: [
                   Container(
-                    width: 90,
-                    height: 90,
+                    width: 92,
+                    height: 92,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: Colors.white.withValues(alpha: 0.45),
                       shape: BoxShape.circle,
                     ),
                   ),
                   Container(
-                    width: 76,
-                    height: 76,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      hasActive ? Icons.health_and_safety_rounded : Icons.local_hospital_rounded,
-                      color: DoctorTheme.primary,
-                      size: 38,
+                      border: Border.all(color: Colors.white, width: 2.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1A5C6B).withValues(alpha: 0.15),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/doctor_lady.jpg'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ],
