@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'features/staff/screens/staff_dashboard_screen.dart';
-import 'features/staff/screens/patient_status_update_screen.dart';
 
 void main() {
   runApp(const MyApp());
