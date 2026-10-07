@@ -4,7 +4,8 @@ import '../models/walk_in_booking.dart';
 
 class StaffApiService {
   // Change this to your backend URL when ready
-  static const String baseUrl = 'http://10.0.2.2:5000/api';
+  // Use 10.0.2.2 for Android emulator, localhost for web/desktop
+  static const String baseUrl = 'http://localhost:5000/api';
 
   // CREATE — add a new walk-in booking
   Future<WalkInBooking?> createBooking(WalkInBooking booking) async {

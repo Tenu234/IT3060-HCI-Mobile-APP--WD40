@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'features/staff/screens/staff_dashboard_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,13 +11,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'OPD Queue - Staff',
+      title: 'OPD Queue',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1565C0)),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      home: const StaffDashboardScreen(),
+      home: const LoginScreen(),
     );
   }
 }
