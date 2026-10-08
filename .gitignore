@@ -1,0 +1,11 @@
+.env*
+**/node_modules/
+*.db
+*.db-shm
+*.db-wal
+client/.dart_tool/
+client/build/
+client/.flutter-plugins-dependencies
+client/**/ephemeral/
+client/.idea/
+*.iml
