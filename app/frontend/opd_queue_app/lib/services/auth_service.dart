@@ -6,8 +6,8 @@ import '../patient/services/appointment_service.dart';
 class AuthService {
   // Toggle this to false when your backend is ready, then set _baseUrl
   static const bool _useMock = false;
-  static const String _baseUrl = 'http://localhost:5000/api'; // web/desktop
-  // For Android emulator use: 'http://10.0.2.2:5000/api'
+  static const String _baseUrl = 'http://10.0.2.2:5000/api'; // Android emulator
+  // For web/desktop use: 'http://localhost:5000/api'
 
   // ─── Mock users for testing all 4 roles ───────────────────────────────────
   static final List<Map<String, String>> _mockUsers = [
@@ -15,6 +15,7 @@ class AuthService {
     {'email': 'doctor@test.com',   'password': '123456', 'role': 'doctor',  'name': 'Dr. Smith',    'id': '2'},
     {'email': 'nurse@test.com',    'password': '123456', 'role': 'nurse',   'name': 'Nurse Anna',   'id': '3'},
     {'email': 'admin@test.com',    'password': '123456', 'role': 'admin',   'name': 'Admin Root',   'id': '4'},
+    {'email': 'staff@test.com',    'password': '123456', 'role': 'staff',   'name': 'Staff User',   'id': '5'},
   ];
 
   static Future<UserModel> login(String email, String password) async {

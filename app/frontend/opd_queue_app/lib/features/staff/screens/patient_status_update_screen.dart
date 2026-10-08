@@ -2,339 +2,239 @@ import 'package:flutter/material.dart';
 import '../models/walk_in_booking.dart';
 import '../services/staff_api_service.dart';
 
+const _primary = Color(0xFF006D77);
+
 class PatientStatusUpdateScreen extends StatefulWidget {
   const PatientStatusUpdateScreen({super.key});
-
   @override
-  State<PatientStatusUpdateScreen> createState() =>
-      _PatientStatusUpdateScreenState();
+  State<PatientStatusUpdateScreen> createState() => _PatientStatusUpdateScreenState();
 }
 
-class _PatientStatusUpdateScreenState
-    extends State<PatientStatusUpdateScreen> {
-  final StaffApiService _apiService = StaffApiService();
+class _PatientStatusUpdateScreenState extends State<PatientStatusUpdateScreen> {
+  final StaffApiService _api = StaffApiService();
   List<WalkInBooking> _bookings = [];
   bool _isLoading = true;
 
-  // Status flow order
-  final List<Map<String, dynamic>> _statusFlow = [
-    {
-      'value': 'entered_opd',
-      'label': 'Entered OPD',
-      'icon': Icons.login,
-      'color': Colors.teal,
-    },
-    {
-      'value': 'waiting_room',
-      'label': 'Waiting Room',
-      'icon': Icons.hourglass_empty,
-      'color': Colors.orange,
-    },
-    {
-      'value': 'in_consultation',
-      'label': 'In Consultation',
-      'icon': Icons.medical_services,
-      'color': Colors.blue,
-    },
-    {
-      'value': 'completed',
-      'label': 'Completed',
-      'icon': Icons.check_circle,
-      'color': Colors.green,
-    },
+  final _flow = [
+    {'value': 'entered_opd',     'label': 'Entered',      'icon': Icons.login_rounded,            'color': const Color(0xFF006D77)},
+    {'value': 'waiting_room',    'label': 'Waiting',      'icon': Icons.hourglass_empty_rounded,  'color': const Color(0xFFE9943A)},
+    {'value': 'in_consultation', 'label': 'Consulting',   'icon': Icons.medical_services_rounded, 'color': const Color(0xFF3A7BD5)},
+    {'value': 'completed',       'label': 'Completed',    'icon': Icons.check_circle_rounded,     'color': const Color(0xFF2ECC71)},
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _loadBookings();
-  }
+  void initState() { super.initState(); _load(); }
 
-  Future<void> _loadBookings() async {
+  Future<void> _load() async {
     setState(() => _isLoading = true);
-    final bookings = await _apiService.getAllBookings();
+    final all = await _api.getAllBookings();
     setState(() {
-      _bookings = bookings
-          .where((b) => b.status != 'cancelled' && b.status != 'absent')
-          .toList();
+      _bookings = all.where((b) => b.status != 'cancelled' && b.status != 'absent').toList();
       _isLoading = false;
     });
   }
 
-  int _statusIndex(String status) {
-    return _statusFlow.indexWhere((s) => s['value'] == status);
-  }
+  int _idx(String s) => _flow.indexWhere((f) => f['value'] == s);
 
-  Future<void> _progressStatus(WalkInBooking booking) async {
-    final currentIndex = _statusIndex(booking.status);
-    if (currentIndex < _statusFlow.length - 1) {
-      final nextStatus = _statusFlow[currentIndex + 1]['value'] as String;
-      if (booking.id != null) {
-        await _apiService.updateBooking(booking.id!, {'status': nextStatus});
-        _loadBookings();
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                '${booking.patientName} moved to ${nextStatus.replaceAll('_', ' ')}'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+  Future<void> _advance(WalkInBooking b) async {
+    final i = _idx(b.status);
+    if (i < _flow.length - 1 && b.id != null) {
+      final next = _flow[i + 1]['value'] as String;
+      await _api.updateBooking(b.id!, {'status': next});
+      _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('${b.patientName} → ${next.replaceAll('_', ' ')}'),
+        backgroundColor: _primary,
+      ));
     }
   }
 
-  Future<void> _markAbsent(WalkInBooking booking) async {
-    final confirm = await showDialog<bool>(
+  Future<void> _absent(WalkInBooking b) async {
+    final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Mark as Absent'),
-        content: Text('Mark ${booking.patientName} as absent?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Mark Absent'),
+        content: Text('Mark ${b.patientName} as absent?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('No')),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Yes',
-                  style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('No')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Mark Absent'),
+          ),
         ],
       ),
     );
-
-    if (confirm == true && booking.id != null) {
-      await _apiService.updateBooking(booking.id!, {'status': 'absent'});
-      _loadBookings();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Patient marked as absent'),
-            backgroundColor: Colors.orange),
-      );
+    if (ok == true && b.id != null) {
+      await _api.updateBooking(b.id!, {'status': 'absent'});
+      _load();
     }
-  }
-
-  Color _getStatusColor(String status) {
-    final s = _statusFlow.firstWhere(
-      (e) => e['value'] == status,
-      orElse: () => {'color': Colors.grey},
-    );
-    return s['color'] as Color;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF4F9F9),
       appBar: AppBar(
-        title: const Text('Patient Turn Status',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF1565C0),
+        backgroundColor: _primary,
         foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-              icon: const Icon(Icons.refresh), onPressed: _loadBookings),
-        ],
+        elevation: 0,
+        title: const Text('Patient Status', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [IconButton(icon: const Icon(Icons.refresh_rounded), onPressed: _load)],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: _primary))
           : Column(
               children: [
-                // Status flow indicator
+                // Flow bar
                 Container(
                   color: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 12, horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   child: Row(
-                    children: _statusFlow.map((s) {
-                      final index = _statusFlow.indexOf(s);
-                      final isLast = index == _statusFlow.length - 1;
-                      return Expanded(
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor:
-                                        s['color'] as Color,
-                                    child: Icon(
-                                        s['icon'] as IconData,
-                                        color: Colors.white,
-                                        size: 16),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    s['label'] as String,
-                                    style: const TextStyle(
-                                        fontSize: 9),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
+                    children: List.generate(_flow.length * 2 - 1, (i) {
+                      if (i.isOdd) {
+                        return const Expanded(
+                          child: Divider(color: Color(0xFFDDE2E6), thickness: 1.5),
+                        );
+                      }
+                      final s = _flow[i ~/ 2];
+                      return Column(
+                        children: [
+                          Container(
+                            width: 36, height: 36,
+                            decoration: BoxDecoration(
+                              color: (s['color'] as Color).withOpacity(0.12),
+                              shape: BoxShape.circle,
                             ),
-                            if (!isLast)
-                              const Icon(Icons.arrow_forward,
-                                  size: 14, color: Colors.grey),
-                          ],
-                        ),
+                            child: Icon(s['icon'] as IconData, color: s['color'] as Color, size: 18),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(s['label'] as String, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                        ],
                       );
-                    }).toList(),
+                    }),
                   ),
                 ),
 
-                // Patient list
                 Expanded(
                   child: _bookings.isEmpty
-                      ? const Center(
-                          child: Text('No active patients',
-                              style: TextStyle(color: Colors.grey)))
+                      ? Center(
+                          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                            Icon(Icons.people_rounded, size: 56, color: Colors.grey.shade300),
+                            const SizedBox(height: 12),
+                            const Text('No active patients', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                          ]),
+                        )
                       : RefreshIndicator(
-                          onRefresh: _loadBookings,
+                          onRefresh: _load,
+                          color: _primary,
                           child: ListView.builder(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(16),
                             itemCount: _bookings.length,
-                            itemBuilder: (context, index) {
-                              final b = _bookings[index];
-                              final currentIndex =
-                                  _statusIndex(b.status);
-                              final canProgress =
-                                  currentIndex <
-                                      _statusFlow.length - 1;
+                            itemBuilder: (_, i) {
+                              final b = _bookings[i];
+                              final idx = _idx(b.status);
+                              final flowEntry = idx >= 0 ? _flow[idx] : null;
+                              final c = flowEntry != null ? flowEntry['color'] as Color : Colors.grey;
+                              final canAdvance = idx >= 0 && idx < _flow.length - 1;
 
-                              return Card(
-                                margin:
-                                    const EdgeInsets.only(bottom: 10),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(12)),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment
-                                                .spaceBetween,
-                                        children: [
-                                          Text(b.patientName,
-                                              style: const TextStyle(
-                                                  fontWeight:
-                                                      FontWeight.bold,
-                                                  fontSize: 16)),
-                                          Container(
-                                            padding: const EdgeInsets
-                                                .symmetric(
-                                                horizontal: 8,
-                                                vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: _getStatusColor(
-                                                      b.status)
-                                                  .withOpacity(0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      8),
-                                            ),
-                                            child: Text(
-                                              b.status
-                                                  .replaceAll('_', ' ')
-                                                  .toUpperCase(),
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  color:
-                                                      _getStatusColor(
-                                                          b.status),
-                                                  fontWeight:
-                                                      FontWeight.bold),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                          '${b.doctorName} — ${b.roomNumber}',
-                                          style: const TextStyle(
-                                              color: Colors.grey)),
-                                      const SizedBox(height: 12),
-
-                                      // Progress stepper
-                                      Row(
-                                        children: List.generate(
-                                          _statusFlow.length,
-                                          (i) => Expanded(
-                                            child: Container(
-                                              height: 6,
-                                              margin: EdgeInsets.only(
-                                                  right: i <
-                                                          _statusFlow
-                                                                  .length -
-                                                              1
-                                                      ? 4
-                                                      : 0),
-                                              decoration: BoxDecoration(
-                                                color: i <=
-                                                        currentIndex
-                                                    ? (_statusFlow[i][
-                                                            'color']
-                                                        as Color)
-                                                    : Colors.grey
-                                                        .shade200,
-                                                borderRadius:
-                                                    BorderRadius
-                                                        .circular(3),
-                                              ),
-                                            ),
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 14),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(18),
+                                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundColor: c.withOpacity(0.1),
+                                          child: Text(
+                                            b.patientName.isNotEmpty ? b.patientName[0].toUpperCase() : '?',
+                                            style: TextStyle(color: c, fontWeight: FontWeight.bold),
                                           ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 12),
-
-                                      Row(
-                                        children: [
-                                          if (canProgress)
-                                            Expanded(
-                                              child: ElevatedButton.icon(
-                                                onPressed: () =>
-                                                    _progressStatus(b),
-                                                icon: const Icon(
-                                                    Icons.arrow_forward,
-                                                    size: 16),
-                                                label: Text(
-                                                  'Move to ${(_statusFlow[currentIndex + 1]['label'] as String)}',
-                                                  style: const TextStyle(
-                                                      fontSize: 12),
-                                                ),
-                                                style: ElevatedButton
-                                                    .styleFrom(
-                                                  backgroundColor:
-                                                      const Color(
-                                                          0xFF1565C0),
-                                                  foregroundColor:
-                                                      Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                          if (canProgress)
-                                            const SizedBox(width: 8),
-                                          OutlinedButton.icon(
-                                            onPressed: () =>
-                                                _markAbsent(b),
-                                            icon: const Icon(
-                                                Icons.person_off,
-                                                size: 16,
-                                                color: Colors.red),
-                                            label: const Text('Absent',
-                                                style: TextStyle(
-                                                    color: Colors.red,
-                                                    fontSize: 12)),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(b.patientName,
+                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                              Text('${b.doctorName}  ·  ${b.roomNumber}',
+                                                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                              color: c.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(20)),
+                                          child: Text(b.status.replaceAll('_', ' '),
+                                              style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.bold)),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 14),
+
+                                    // Progress bar
+                                    Row(
+                                      children: List.generate(_flow.length, (j) => Expanded(
+                                        child: Container(
+                                          height: 5,
+                                          margin: EdgeInsets.only(right: j < _flow.length - 1 ? 4 : 0),
+                                          decoration: BoxDecoration(
+                                            color: j <= idx
+                                                ? (_flow[j]['color'] as Color)
+                                                : const Color(0xFFEEEEEE),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                      )),
+                                    ),
+                                    const SizedBox(height: 14),
+
+                                    Row(
+                                      children: [
+                                        if (canAdvance)
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                                              label: Text(
+                                                'Move to ${_flow[idx + 1]['label']}',
+                                                style: const TextStyle(fontSize: 13),
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: _primary,
+                                                foregroundColor: Colors.white,
+                                                elevation: 0,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                              ),
+                                              onPressed: () => _advance(b),
+                                            ),
+                                          ),
+                                        if (canAdvance) const SizedBox(width: 10),
+                                        OutlinedButton.icon(
+                                          icon: const Icon(Icons.person_off_rounded, size: 16, color: Colors.red),
+                                          label: const Text('Absent', style: TextStyle(color: Colors.red, fontSize: 13)),
+                                          style: OutlinedButton.styleFrom(
+                                            side: const BorderSide(color: Colors.red),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                                          ),
+                                          onPressed: () => _absent(b),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               );
                             },

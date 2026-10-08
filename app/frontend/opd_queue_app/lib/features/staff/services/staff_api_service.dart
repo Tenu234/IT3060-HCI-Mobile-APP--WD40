@@ -3,9 +3,8 @@ import 'package:http/http.dart' as http;
 import '../models/walk_in_booking.dart';
 
 class StaffApiService {
-  // Change this to your backend URL when ready
-  // Use 10.0.2.2 for Android emulator, localhost for web/desktop
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = 'http://10.0.2.2:5000/api'; // Android emulator
+  // For web/desktop use: 'http://localhost:5000/api'
 
   // CREATE — add a new walk-in booking
   Future<WalkInBooking?> createBooking(WalkInBooking booking) async {

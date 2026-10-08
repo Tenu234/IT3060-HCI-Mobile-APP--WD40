@@ -23,7 +23,7 @@ app.use('/api/appointments', appointmentRoutes);
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log('MongoDB connected');
+    console.log('MongoDB connected to:', process.env.MONGO_URI);
     app.listen(process.env.PORT || 5000, () =>
       console.log(`Server running on port ${process.env.PORT || 5000}`)
     );

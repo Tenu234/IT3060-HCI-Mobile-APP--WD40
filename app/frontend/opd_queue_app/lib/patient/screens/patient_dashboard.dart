@@ -6,6 +6,7 @@ import '../../screens/login_screen.dart';
 import 'appointment_detail_screen.dart';
 import 'opd_search_screen.dart';
 import 'patient_profile_screen.dart';
+import '../../features/staff/screens/staff_dashboard_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final UserModel user;
@@ -70,6 +71,14 @@ class _PatientDashboardState extends State<PatientDashboard> {
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
         actions: [
+          // Staff access button (visible only for staff accounts)
+          if (widget.user.email == 'tharumendis698@gmail.com')
+            IconButton(
+              icon: const Icon(Icons.dashboard_customize),
+              tooltip: 'Staff Dashboard',
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const StaffDashboardScreen())),
+            ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: 'Profile',

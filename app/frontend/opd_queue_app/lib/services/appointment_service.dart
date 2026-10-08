@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/appointment_model.dart';
 
 class AppointmentService {
-  static const String _baseUrl = 'http://localhost:5000/api/appointments';
+  static const String _baseUrl = 'http://10.0.2.2:5000/api/appointments';
 
   static String? _token; // set this after login
 

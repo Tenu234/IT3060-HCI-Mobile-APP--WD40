@@ -2,76 +2,49 @@ import 'package:flutter/material.dart';
 import '../models/walk_in_booking.dart';
 import '../services/staff_api_service.dart';
 
+const _primary = Color(0xFF006D77);
+
 class WalkInBookingScreen extends StatefulWidget {
   const WalkInBookingScreen({super.key});
-
   @override
   State<WalkInBookingScreen> createState() => _WalkInBookingScreenState();
 }
 
 class _WalkInBookingScreenState extends State<WalkInBookingScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final StaffApiService _apiService = StaffApiService();
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _api = StaffApiService();
 
-  String _selectedDoctor = 'Dr. Perera';
-  String _selectedRoom = 'Room 1';
-  bool _isLoading = false;
+  String _doctor = 'Dr. Perera';
+  String _room = 'Room 1';
+  bool _loading = false;
 
-  final List<String> _doctors = [
-    'Dr. Perera',
-    'Dr. Silva',
-    'Dr. Fernando',
-    'Dr. Jayasinghe',
-  ];
-
-  final List<String> _rooms = [
-    'Room 1',
-    'Room 2',
-    'Room 3',
-    'Room 4',
-  ];
+  final _doctors = ['Dr. Perera', 'Dr. Silva', 'Dr. Fernando', 'Dr. Jayasinghe'];
+  final _rooms   = ['Room 1', 'Room 2', 'Room 3', 'Room 4'];
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
+  void dispose() { _nameCtrl.dispose(); _phoneCtrl.dispose(); super.dispose(); }
 
-  Future<void> _submitBooking() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    final booking = WalkInBooking(
-      patientName: _nameController.text.trim(),
-      patientPhone: _phoneController.text.trim(),
-      doctorName: _selectedDoctor,
-      roomNumber: _selectedRoom,
-    );
-
-    final result = await _apiService.createBooking(booking);
-
-    setState(() => _isLoading = false);
-
+    setState(() => _loading = true);
+    final result = await _api.createBooking(WalkInBooking(
+      patientName: _nameCtrl.text.trim(),
+      patientPhone: _phoneCtrl.text.trim(),
+      doctorName: _doctor,
+      roomNumber: _room,
+    ));
+    setState(() => _loading = false);
     if (!mounted) return;
-
     if (result != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Walk-in booking created successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
       Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Patient registered successfully'), backgroundColor: _primary),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to create booking. Check connection.'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Failed — check connection'), backgroundColor: Colors.red),
       );
     }
   }
@@ -79,88 +52,63 @@ class _WalkInBookingScreenState extends State<WalkInBookingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: const Color(0xFFF4F9F9),
       appBar: AppBar(
-        title: const Text('New Walk-In Booking',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: const Color(0xFF1565C0),
+        backgroundColor: _primary,
         foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Walk-In Booking', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Patient Information',
-                  style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-
-              // Patient Name
-              TextFormField(
-                controller: _nameController,
-                decoration: _inputDecoration('Patient Full Name', Icons.person),
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Enter patient name' : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Phone Number
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: _inputDecoration('Phone Number', Icons.phone),
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Enter phone number' : null,
-              ),
-              const SizedBox(height: 24),
-
-              const Text('Assignment',
-                  style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-
-              // Doctor dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedDoctor,
-                decoration: _inputDecoration('Assign Doctor', Icons.medical_services),
-                items: _doctors
-                    .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedDoctor = v!),
-              ),
-              const SizedBox(height: 16),
-
-              // Room dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedRoom,
-                decoration: _inputDecoration('Room Number', Icons.meeting_room),
-                items: _rooms
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedRoom = v!),
-              ),
+              _Section(label: 'Patient Details', children: [
+                _Field(ctrl: _nameCtrl, label: 'Full Name', icon: Icons.person_rounded,
+                    validator: (v) => v!.isEmpty ? 'Required' : null),
+                const SizedBox(height: 14),
+                _Field(ctrl: _phoneCtrl, label: 'Phone Number', icon: Icons.phone_rounded,
+                    keyboard: TextInputType.phone,
+                    validator: (v) => v!.isEmpty ? 'Required' : null),
+              ]),
+              const SizedBox(height: 20),
+              _Section(label: 'Assignment', children: [
+                _Dropdown(
+                  label: 'Doctor',
+                  icon: Icons.medical_services_rounded,
+                  value: _doctor,
+                  items: _doctors,
+                  onChanged: (v) => setState(() => _doctor = v!),
+                ),
+                const SizedBox(height: 14),
+                _Dropdown(
+                  label: 'Room',
+                  icon: Icons.meeting_room_rounded,
+                  value: _room,
+                  items: _rooms,
+                  onChanged: (v) => setState(() => _room = v!),
+                ),
+              ]),
               const SizedBox(height: 32),
-
-              // Submit button
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 52,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submitBooking,
+                  onPressed: _loading ? null : _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1565C0),
+                    backgroundColor: _primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Create Booking',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: _loading
+                      ? const SizedBox(width: 22, height: 22,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                      : const Text('Register Patient',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -169,14 +117,89 @@ class _WalkInBookingScreenState extends State<WalkInBookingScreen> {
       ),
     );
   }
+}
 
-  InputDecoration _inputDecoration(String label, IconData icon) {
-    return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      filled: true,
-      fillColor: Colors.white,
+class _Section extends StatelessWidget {
+  final String label;
+  final List<Widget> children;
+  const _Section({required this.label, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF1A1A2E))),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+}
+
+class _Field extends StatelessWidget {
+  final TextEditingController ctrl;
+  final String label;
+  final IconData icon;
+  final TextInputType keyboard;
+  final String? Function(String?) validator;
+  const _Field({required this.ctrl, required this.label, required this.icon,
+      this.keyboard = TextInputType.text, required this.validator});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: ctrl,
+      keyboardType: keyboard,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: _primary, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFFDDE2E6))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFFDDE2E6))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: _primary, width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      ),
+    );
+  }
+}
+
+class _Dropdown extends StatelessWidget {
+  final String label, value;
+  final IconData icon;
+  final List<String> items;
+  final void Function(String?) onChanged;
+  const _Dropdown({required this.label, required this.icon, required this.value,
+      required this.items, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: _primary, size: 20),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFFDDE2E6))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFFDDE2E6))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: _primary, width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      ),
+      items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+      onChanged: onChanged,
     );
   }
 }
