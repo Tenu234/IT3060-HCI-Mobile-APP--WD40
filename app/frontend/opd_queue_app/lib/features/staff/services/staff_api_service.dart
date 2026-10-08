@@ -36,6 +36,24 @@ class StaffApiService {
     return [];
   }
 
+  // READ — get bookings for a specific patient by phone
+  Future<List<WalkInBooking>> getBookingsByPhone(String phone) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/bookings'));
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+        return data
+            .map((e) => WalkInBooking.fromJson(e))
+            .where((b) => b.patientPhone.trim() == phone.trim())
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      }
+    } catch (e) {
+      print('Get bookings by phone error: $e');
+    }
+    return [];
+  }
+
   // UPDATE — update booking details or status
   Future<bool> updateBooking(String id, Map<String, dynamic> data) async {
     try {

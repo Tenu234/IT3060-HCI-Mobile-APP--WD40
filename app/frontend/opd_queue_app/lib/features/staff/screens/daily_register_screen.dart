@@ -3,6 +3,7 @@ import '../../../theme.dart';
 import '../models/walk_in_booking.dart';
 import '../services/staff_api_service.dart';
 import 'patient_history_screen.dart';
+import 'patient_queue_status_screen.dart';
 
 class DailyRegisterScreen extends StatefulWidget {
   const DailyRegisterScreen({super.key});
@@ -267,7 +268,13 @@ class _DailyRegisterScreenState extends State<DailyRegisterScreen> {
                         itemBuilder: (_, i) {
                           final b = _filtered[i];
                           final c = statusColor(b.status);
-                          return Container(
+                          return GestureDetector(
+                            onTap: () => Navigator.push(context,
+                              MaterialPageRoute(builder: (_) => PatientQueueStatusScreen(
+                                patientPhone: b.patientPhone,
+                                patientName:  b.patientName,
+                              ))),
+                            child: Container(
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: kCardDecoration(),
                             child: ListTile(
@@ -394,6 +401,7 @@ class _DailyRegisterScreenState extends State<DailyRegisterScreen> {
                                 ],
                               ),
                             ),
+                          ),  // closes GestureDetector
                           );
                         },
                       ),
