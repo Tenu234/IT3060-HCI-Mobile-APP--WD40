@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import 'dashboards/patient_dashboard.dart';
@@ -11,268 +10,241 @@ import '../features/staff/screens/staff_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey        = GlobalKey<FormState>();
-  final _emailCtrl      = TextEditingController();
-  final _passwordCtrl   = TextEditingController();
-  bool _loading         = false;
-  bool _hidePass        = true;
-  String? _error;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
       final user = await AuthService.login(
-        _emailCtrl.text.trim(), _passwordCtrl.text);
-      if (mounted) _go(user);
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+      if (mounted) _navigateToDashboard(user);
     } catch (e) {
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      setState(() {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _go(UserModel user) {
-    Widget dash;
+  /// Routes the user to the correct dashboard based on their role.
+  void _navigateToDashboard(UserModel user) {
+    Widget dashboard;
+
     switch (user.role.toLowerCase()) {
-      case 'doctor': dash = DoctorDashboard(user: user); break;
-      case 'nurse':  dash = NurseDashboard(user: user);  break;
-      case 'admin':  dash = AdminDashboard(user: user);  break;
-      default:       dash = PatientDashboard(user: user);
+      case 'doctor':
+        dashboard = DoctorDashboard(user: user);
+        break;
+      case 'nurse':
+        dashboard = NurseDashboard(user: user);
+        break;
+      case 'admin':
+        dashboard = AdminDashboard(user: user);
+        break;
+      case 'patient':
+      default:
+        dashboard = PatientDashboard(user: user);
+        break;
     }
+
     Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (_) => dash));
+      context,
+      MaterialPageRoute(builder: (_) => dashboard),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: kSurface,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // ── Header banner ───────────────────────────────────────────
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(24, 48, 24, 40),
-                decoration: const BoxDecoration(
-                  color: kPrimary,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo / Icon
+                Icon(
+                  Icons.local_hospital_rounded,
+                  size: 72,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'OPD Queue System',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 68, height: 68,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                      child: const Icon(Icons.local_hospital_rounded,
-                          color: kPrimary, size: 34),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('OPD Queue',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text('Sign in to your account',
-                        style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                            fontSize: 13)),
-                  ],
+                const SizedBox(height: 8),
+                Text(
+                  'Sign in to continue',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 36),
 
-              // ── Form ────────────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                child: Form(
+                // Form
+                Form(
                   key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Email', style: kLabelStyle),
-                      const SizedBox(height: 6),
+                      // Email field
                       TextFormField(
-                        controller: _emailCtrl,
+                        controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: kInputDecoration(
-                            label: 'Enter your email',
-                            icon: Icons.email_outlined),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Required';
-                          if (!v.contains('@')) return 'Invalid email';
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          prefixIcon: Icon(Icons.email_outlined),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Enter a valid email address';
+                          }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
-                      const Text('Password', style: kLabelStyle),
-                      const SizedBox(height: 6),
+                      // Password field
                       TextFormField(
-                        controller: _passwordCtrl,
-                        obscureText: _hidePass,
-                        decoration: kInputDecoration(
-                          label: 'Enter your password',
-                          icon: Icons.lock_outline_rounded,
-                          suffix: IconButton(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          border: const OutlineInputBorder(),
+                          suffixIcon: IconButton(
                             icon: Icon(
-                              _hidePass
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                              color: kTextMuted, size: 20,
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                             ),
-                            onPressed: () =>
-                                setState(() => _hidePass = !_hidePass),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                         ),
-                        validator: (v) =>
-                            (v == null || v.isEmpty) ? 'Required' : null,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          return null;
+                        },
                       ),
+                      const SizedBox(height: 12),
 
-                      // Error banner
-                      if (_error != null) ...[
-                        const SizedBox(height: 16),
+                      // Error message
+                      if (_errorMessage != null)
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: kCancelled.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                                color: kCancelled.withOpacity(0.3)),
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade200),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.error_outline_rounded,
-                                  color: kCancelled, size: 18),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(_error!,
-                                    style: const TextStyle(
-                                        color: kCancelled, fontSize: 13)),
-                              ),
-                            ],
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(color: Colors.red.shade700),
                           ),
                         ),
-                      ],
 
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
 
                       // Login button
                       SizedBox(
                         width: double.infinity,
-                        height: 52,
+                        height: 48,
                         child: ElevatedButton(
-                          onPressed: _loading ? null : _login,
+                          onPressed: _isLoading ? null : _handleLogin,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimary,
+                            backgroundColor: theme.colorScheme.primary,
                             foregroundColor: Colors.white,
-                            elevation: 0,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                          child: _loading
+                          child: _isLoading
                               ? const SizedBox(
-                                  width: 22, height: 22,
+                                  width: 22,
+                                  height: 22,
                                   child: CircularProgressIndicator(
-                                      color: Colors.white, strokeWidth: 2.5))
-                              : const Text('Sign In',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold)),
+                                      color: Colors.white, strokeWidth: 2.5),
+                                )
+                              : const Text('Login',
+                                  style: TextStyle(fontSize: 16)),
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
-                      // Register row
+                      // Register link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("Don't have an account? ",
-                              style: TextStyle(
-                                  color: kTextMuted, fontSize: 13)),
-                          GestureDetector(
-                            onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        const RegisterScreen())),
-                            child: const Text('Register',
-                                style: TextStyle(
-                                    color: kPrimary,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold)),
+                          Text("Don't have an account?",
+                              style: TextStyle(color: Colors.grey[600])),
+                          TextButton(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const RegisterScreen()),
+                            ),
+                            child: const Text('Register Here'),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 24),
-
-                      // Divider
-                      Row(children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text('or',
-                              style: TextStyle(
-                                  color: Colors.grey.shade400,
-                                  fontSize: 12)),
+                      // Staff access
+                      TextButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const StaffDashboardScreen()),
                         ),
-                        const Expanded(child: Divider()),
-                      ]),
-
-                      const SizedBox(height: 20),
-
-                      // Staff quick-access
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.badge_outlined,
-                              color: kPrimary, size: 20),
-                          label: const Text('Staff / Nurse Access',
-                              style: TextStyle(
-                                  color: kPrimary,
-                                  fontWeight: FontWeight.w600)),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                                color: kPrimary, width: 1.5),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
-                          ),
-                          onPressed: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) =>
-                                      const StaffDashboardScreen())),
-                        ),
+                        child: const Text('Staff / Nurse Access →'),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
