@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../theme.dart';
 import '../models/walk_in_booking.dart';
 import '../services/staff_api_service.dart';
+import 'patient_history_screen.dart';
 
 class DailyRegisterScreen extends StatefulWidget {
   const DailyRegisterScreen({super.key});
@@ -356,10 +357,20 @@ class _DailyRegisterScreenState extends State<DailyRegisterScreen> {
                                     borderRadius:
                                         BorderRadius.circular(14)),
                                 onSelected: (v) {
+                                  if (v == 'history')  Navigator.push(context, MaterialPageRoute(builder: (_) => PatientHistoryScreen(booking: b)));
                                   if (v == 'reassign') _reassign(b);
                                   if (v == 'cancel') _cancel(b);
                                 },
                                 itemBuilder: (_) => [
+                                  const PopupMenuItem(
+                                    value: 'history',
+                                    child: Row(children: [
+                                      Icon(Icons.history_rounded,
+                                          size: 18, color: kPrimary),
+                                      SizedBox(width: 10),
+                                      Text('View History'),
+                                    ]),
+                                  ),
                                   const PopupMenuItem(
                                     value: 'reassign',
                                     child: Row(children: [
