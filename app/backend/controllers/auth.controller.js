@@ -62,10 +62,14 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required.' });
+      return res.status(400).json({ message: 'Email/NIC and password are required.' });
     }
 
-    const user = await User.findOne({ email });
+    // Allow login by email OR NIC
+    const user = await User.findOne({
+      $or: [{ email }, { nic: email }],
+    });
+
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
