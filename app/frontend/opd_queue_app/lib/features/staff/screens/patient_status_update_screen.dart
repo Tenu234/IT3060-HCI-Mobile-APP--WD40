@@ -3,6 +3,14 @@ import '../../../theme.dart';
 import '../models/walk_in_booking.dart';
 import '../services/staff_api_service.dart';
 
+// Top-level constant so both screen and widget can access it
+const _kFlow = [
+  {'value': 'entered_opd',     'label': 'Entered',    'icon': Icons.login_rounded,            'color': kWaiting},
+  {'value': 'waiting_room',    'label': 'Waiting',    'icon': Icons.hourglass_top_rounded,    'color': Color(0xFFF59E0B)},
+  {'value': 'in_consultation', 'label': 'Consulting', 'icon': Icons.medical_services_rounded, 'color': kActive},
+  {'value': 'completed',       'label': 'Completed',  'icon': Icons.check_circle_rounded,     'color': kDone},
+];
+
 class PatientStatusUpdateScreen extends StatefulWidget {
   const PatientStatusUpdateScreen({super.key});
   @override
@@ -15,14 +23,6 @@ class _PatientStatusUpdateScreenState
   final StaffApiService _api = StaffApiService();
   List<WalkInBooking> _bookings = [];
   bool _isLoading = true;
-
-  // The 4-step flow (ordered)
-  static const _flow = [
-    {'value': 'entered_opd',     'label': 'Entered',     'icon': Icons.login_rounded,            'color': kWaiting},
-    {'value': 'waiting_room',    'label': 'Waiting',     'icon': Icons.hourglass_top_rounded,    'color': Color(0xFFF59E0B)},
-    {'value': 'in_consultation', 'label': 'Consulting',  'icon': Icons.medical_services_rounded, 'color': kActive},
-    {'value': 'completed',       'label': 'Completed',   'icon': Icons.check_circle_rounded,     'color': kDone},
-  ];
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _PatientStatusUpdateScreenState
     });
   }
 
-  int _idx(String s) => _flow.indexWhere((f) => f['value'] == s);
+  int _idx(String s) => _kFlow.indexWhere((f) => f['value'] == s);
 
   String _tokenFor(WalkInBooking b) {
     final raw = b.id ?? DateTime.now().millisecondsSinceEpoch.toString();
@@ -50,8 +50,8 @@ class _PatientStatusUpdateScreenState
 
   Future<void> _advance(WalkInBooking b) async {
     final i = _idx(b.status);
-    if (i < _flow.length - 1 && b.id != null) {
-      final next = _flow[i + 1]['value'] as String;
+    if (i < _kFlow.length - 1 && b.id != null) {
+      final next = _kFlow[i + 1]['value'] as String;
       await _api.updateBooking(b.id!, {'status': next});
       _load();
       if (!mounted) return;
@@ -126,7 +126,6 @@ class _PatientStatusUpdateScreenState
                             booking: _bookings[i],
                             idx: _idx(_bookings[i].status),
                             token: _tokenFor(_bookings[i]),
-                            flow: _flow,
                             onAdvance: () => _advance(_bookings[i]),
                             onAbsent: () => _markAbsent(_bookings[i]),
                           ),
@@ -140,21 +139,19 @@ class _PatientStatusUpdateScreenState
 
 // ── Flow steps bar ────────────────────────────────────────────────────────────
 class _FlowStepsBar extends StatelessWidget {
-  static const _flow = PatientStatusUpdateScreen._flow;
-
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       child: Row(
-        children: List.generate(_flow.length * 2 - 1, (i) {
+        children: List.generate(_kFlow.length * 2 - 1, (i) {
           if (i.isOdd) {
             return const Expanded(
               child: Divider(color: Color(0xFFE5E7EB), thickness: 1.5),
             );
           }
-          final s = _flow[i ~/ 2];
+          final s = _kFlow[i ~/ 2];
           return Column(mainAxisSize: MainAxisSize.min, children: [
             Container(
               width: 38, height: 38,
@@ -181,7 +178,6 @@ class _PatientCard extends StatelessWidget {
   final WalkInBooking booking;
   final int idx;
   final String token;
-  final List<Map<String, Object>> flow;
   final VoidCallback onAdvance;
   final VoidCallback onAbsent;
 
@@ -189,15 +185,14 @@ class _PatientCard extends StatelessWidget {
     required this.booking,
     required this.idx,
     required this.token,
-    required this.flow,
     required this.onAdvance,
     required this.onAbsent,
   });
 
   @override
   Widget build(BuildContext context) {
-    final c = idx >= 0 ? flow[idx]['color'] as Color : kTextMuted;
-    final canAdvance = idx >= 0 && idx < flow.length - 1;
+    final c = idx >= 0 ? _kFlow[idx]['color'] as Color : kTextMuted;
+    final canAdvance = idx >= 0 && idx < _kFlow.length - 1;
     final initial = booking.patientName.isNotEmpty
         ? booking.patientName[0].toUpperCase()
         : '?';
@@ -270,13 +265,13 @@ class _PatientCard extends StatelessWidget {
         const SizedBox(height: 14),
 
         // ── Progress bar ───────────────────────────────────────────────
-        Row(children: List.generate(flow.length, (j) => Expanded(
+        Row(children: List.generate(_kFlow.length, (j) => Expanded(
           child: Container(
             height: 5,
-            margin: EdgeInsets.only(right: j < flow.length - 1 ? 4 : 0),
+            margin: EdgeInsets.only(right: j < _kFlow.length - 1 ? 4 : 0),
             decoration: BoxDecoration(
               color: j <= idx
-                  ? (flow[j]['color'] as Color)
+                  ? (_kFlow[j]['color'] as Color)
                   : const Color(0xFFE5E7EB),
               borderRadius: BorderRadius.circular(4),
             ),
@@ -292,7 +287,7 @@ class _PatientCard extends StatelessWidget {
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.arrow_forward_rounded, size: 16),
                 label: Text(
-                  'Move to ${flow[idx + 1]['label']}',
+                  'Move to ${_kFlow[idx + 1]['label']}',
                   style: const TextStyle(fontSize: 13),
                 ),
                 style: ElevatedButton.styleFrom(
