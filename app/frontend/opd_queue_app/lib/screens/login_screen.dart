@@ -64,6 +64,9 @@ class _LoginScreenState extends State<LoginScreen> {
       case 'nurse':
         dashboard = NurseDashboard(user: user);
         break;
+      case 'staff':
+        dashboard = StaffDashboardScreen();
+        break;
       case 'admin':
         dashboard = AdminDashboard(user: user);
         break;
