@@ -6,6 +6,7 @@ import '../../screens/login_screen.dart';
 import 'appointment_detail_screen.dart';
 import 'opd_search_screen.dart';
 import 'patient_profile_screen.dart';
+import 'lab_reports_screen.dart';
 
 class PatientDashboard extends StatefulWidget {
   final UserModel user;
@@ -138,6 +139,25 @@ class _PatientDashboardState extends State<PatientDashboard> {
                     ));
                     _reload();
                   },
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Lab reports button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.science_outlined),
+                  label: const Text('My Lab Reports'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.primary,
+                    side: BorderSide(color: theme.colorScheme.primary),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => const LabReportsScreen(),
+                  )),
                 ),
               ),
               const SizedBox(height: 24),

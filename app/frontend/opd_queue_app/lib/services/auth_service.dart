@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
 import '../patient/services/appointment_service.dart';
+import '../patient/services/lab_report_service.dart';
 
 class AuthService {
   // Toggle this to false when your backend is ready, then set _baseUrl
@@ -39,7 +40,8 @@ class AuthService {
     final data = jsonDecode(response.body);
     if (response.statusCode == 200) {
       final user = UserModel.fromJson(data);
-      AppointmentService.setToken(user.token); // store token for API calls
+      AppointmentService.setToken(user.token);
+      LabReportService.setToken(user.token);
       return user;
     }
     throw Exception(data['message'] ?? 'Login failed.');
