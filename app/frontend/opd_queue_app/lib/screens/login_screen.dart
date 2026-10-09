@@ -6,6 +6,7 @@ import 'dashboards/doctor_dashboard.dart';
 import 'dashboards/nurse_dashboard.dart';
 import 'dashboards/admin_dashboard.dart';
 import 'register_screen.dart';
+import '../patient/screens/opd_search_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -64,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
         break;
       case 'patient':
       default:
-        dashboard = PatientDashboard(user: user);
+        dashboard = OpdSearchScreen(user: user);
         break;
     }
     Navigator.pushReplacement(
