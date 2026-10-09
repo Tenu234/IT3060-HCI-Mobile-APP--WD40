@@ -1,9 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 import '../models/lab_report_model.dart';
 import '../services/lab_report_service.dart';
 
@@ -47,26 +42,12 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
     }
   }
 
-  /// Copies picked file to app documents directory and returns local path
-  Future<String> _saveFileLocally(String sourcePath) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final fileName = p.basename(sourcePath);
-    final dest = File('${dir.path}/lab_reports/$fileName');
-    await dest.parent.create(recursive: true);
-    await File(sourcePath).copy(dest.path);
-    return dest.path;
-  }
-
   Future<void> _showForm({LabReportModel? existing}) async {
     final nameCtrl  = TextEditingController(text: existing?.reportName ?? '');
     final dateCtrl  = TextEditingController(text: existing?.testDate ?? '');
     final notesCtrl = TextEditingController(text: existing?.notes ?? '');
+    final urlCtrl   = TextEditingController(text: existing?.documentUrl ?? '');
     String selectedCat = existing?.category ?? 'Blood Test';
-    String? pickedFilePath = existing?.documentUrl.isNotEmpty == true
-        ? existing!.documentUrl
-        : null;
-    String? pickedFileName = pickedFilePath != null ? p.basename(pickedFilePath) : null;
-
     final formKey = GlobalKey<FormState>();
     bool saving = false;
 
@@ -92,7 +73,6 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
 
-                  // Report Name
                   TextFormField(
                     controller: nameCtrl,
                     decoration: const InputDecoration(
@@ -101,7 +81,6 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Category
                   DropdownButtonFormField<String>(
                     value: selectedCat,
                     decoration: const InputDecoration(
@@ -113,7 +92,6 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Test Date
                   TextFormField(
                     controller: dateCtrl,
                     readOnly: true,
@@ -138,7 +116,6 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Notes
                   TextFormField(
                     controller: notesCtrl,
                     maxLines: 2,
@@ -147,67 +124,17 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // File Picker
-                  const Text('Document / Image',
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                  const SizedBox(height: 6),
-                  GestureDetector(
-                    onTap: () async {
-                      final result = await FilePicker.platform.pickFiles(
-                        type: FileType.custom,
-                        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-                      );
-                      if (result != null && result.files.single.path != null) {
-                        setModal(() {
-                          pickedFilePath = result.files.single.path;
-                          pickedFileName = result.files.single.name;
-                        });
-                      }
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade400),
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.grey.shade50,
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.attach_file, color: Colors.grey),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              pickedFileName ?? 'Choose file (PDF, JPG, PNG)',
-                              style: TextStyle(
-                                color: pickedFileName != null
-                                    ? Colors.black87
-                                    : Colors.grey,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (pickedFileName != null)
-                            IconButton(
-                              icon: const Icon(Icons.close, size: 18, color: Colors.grey),
-                              onPressed: () => setModal(() {
-                                pickedFilePath = null;
-                                pickedFileName = null;
-                              }),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                        ],
-                      ),
-                    ),
+                  TextFormField(
+                    controller: urlCtrl,
+                    decoration: const InputDecoration(
+                        hintText: 'Document/Image URL (optional)',
+                        border: OutlineInputBorder()),
                   ),
-
                   const SizedBox(height: 20),
 
-                  // Submit button
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 48,
                     child: ElevatedButton(
                       onPressed: saving
                           ? null
@@ -215,22 +142,13 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                               if (!formKey.currentState!.validate()) return;
                               setModal(() => saving = true);
                               try {
-                                // Save file locally if a new file was picked
-                                String localPath = '';
-                                if (pickedFilePath != null &&
-                                    !pickedFilePath!.contains('lab_reports')) {
-                                  localPath = await _saveFileLocally(pickedFilePath!);
-                                } else {
-                                  localPath = pickedFilePath ?? '';
-                                }
-
                                 if (existing == null) {
                                   await LabReportService.create(
                                     reportName: nameCtrl.text.trim(),
                                     category: selectedCat,
                                     testDate: dateCtrl.text,
                                     notes: notesCtrl.text.trim(),
-                                    documentUrl: localPath,
+                                    documentUrl: urlCtrl.text.trim(),
                                   );
                                 } else {
                                   await LabReportService.update(
@@ -239,7 +157,7 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                                     category: selectedCat,
                                     testDate: dateCtrl.text,
                                     notes: notesCtrl.text.trim(),
-                                    documentUrl: localPath,
+                                    documentUrl: urlCtrl.text.trim(),
                                   );
                                 }
                                 if (ctx.mounted) Navigator.pop(ctx);
@@ -263,11 +181,9 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                           ? const SizedBox(width: 20, height: 20,
                               child: CircularProgressIndicator(
                                   color: Colors.white, strokeWidth: 2))
-                          : Text(existing == null ? 'Add Report' : 'Save Changes',
-                              style: const TextStyle(fontWeight: FontWeight.w600)),
+                          : Text(existing == null ? 'Add Report' : 'Save Changes'),
                     ),
                   ),
-                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -277,20 +193,6 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
     );
   }
 
-  Future<void> _openFile(String path) async {
-    if (path.isEmpty) return;
-    final file = File(path);
-    if (await file.exists()) {
-      await OpenFile.open(path);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File not found on this device.')),
-        );
-      }
-    }
-  }
-
   Future<void> _delete(LabReportModel report) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -298,7 +200,9 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
         title: const Text('Delete Report'),
         content: Text('Delete "${report.reportName}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -328,7 +232,6 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
       ),
       body: Column(
         children: [
-          // Category filter chips
           SizedBox(
             height: 50,
             child: ListView.separated(
@@ -355,7 +258,6 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
             ),
           ),
 
-          // Reports list
           Expanded(
             child: FutureBuilder<List<LabReportModel>>(
               future: _reportsFuture,
@@ -388,7 +290,6 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (_, i) {
                     final r = reports[i];
-                    final hasFile = r.documentUrl.isNotEmpty;
                     return Card(
                       elevation: 1,
                       shape: RoundedRectangleBorder(
@@ -403,7 +304,8 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                               color: _categoryColor(r.category)),
                         ),
                         title: Text(r.reportName,
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -414,18 +316,9 @@ class _LabReportsScreenState extends State<LabReportsScreen> {
                                       fontSize: 12, color: Colors.grey),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis),
-                            if (hasFile)
-                              GestureDetector(
-                                onTap: () => _openFile(r.documentUrl),
-                                child: const Text('📎 View File',
-                                    style: TextStyle(
-                                        color: Color(0xFF1565C0),
-                                        fontSize: 12,
-                                        decoration: TextDecoration.underline)),
-                              ),
                           ],
                         ),
-                        isThreeLine: true,
+                        isThreeLine: r.notes.isNotEmpty,
                         trailing: PopupMenuButton<String>(
                           onSelected: (v) {
                             if (v == 'edit') _showForm(existing: r);
