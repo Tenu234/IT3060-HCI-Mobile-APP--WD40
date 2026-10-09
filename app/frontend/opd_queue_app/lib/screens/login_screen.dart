@@ -6,6 +6,7 @@ import 'dashboards/doctor_dashboard.dart';
 import 'dashboards/nurse_dashboard.dart';
 import 'dashboards/admin_dashboard.dart';
 import 'register_screen.dart';
+import '../features/staff/screens/staff_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,7 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() { _isLoading = true; _errorMessage = null; });
 
     try {
@@ -58,6 +58,9 @@ class _LoginScreenState extends State<LoginScreen> {
         break;
       case 'nurse':
         dashboard = NurseDashboard(user: user);
+        break;
+      case 'staff':
+        dashboard = const StaffDashboardScreen();
         break;
       case 'admin':
         dashboard = AdminDashboard(user: user);
@@ -90,8 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide:
-              const BorderSide(color: Color(0xFF1565C0), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -109,13 +111,11 @@ class _LoginScreenState extends State<LoginScreen> {
             // Top bar
             Container(
               color: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 36, height: 36,
                     decoration: BoxDecoration(
                       color: const Color(0xFF1565C0),
                       borderRadius: BorderRadius.circular(8),
@@ -127,11 +127,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Government Hospital OPD',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                       Text('Patient Services',
-                          style:
-                              TextStyle(color: Colors.grey, fontSize: 12)),
+                          style: TextStyle(color: Colors.grey, fontSize: 12)),
                     ],
                   ),
                   const Spacer(),
@@ -149,12 +147,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const SizedBox(height: 16),
                     const Text('Welcome back',
-                        style: TextStyle(
-                            fontSize: 24, fontWeight: FontWeight.bold)),
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
                     Text('Log in to continue to OPD Search.',
-                        style: TextStyle(
-                            color: Colors.grey[600], fontSize: 13)),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                     const SizedBox(height: 24),
 
                     // Card
@@ -166,8 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
+                            blurRadius: 10, offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -195,15 +190,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // Password field
                             const Text('Password',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14)),
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                             const SizedBox(height: 8),
                             TextFormField(
                               controller: _passwordController,
                               obscureText: _obscurePassword,
-                              decoration:
-                                  _inputDecoration('Enter password').copyWith(
+                              decoration: _inputDecoration('Enter password').copyWith(
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
@@ -211,14 +203,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                         : Icons.visibility_outlined,
                                     color: Colors.grey,
                                   ),
-                                  onPressed: () => setState(() =>
-                                      _obscurePassword = !_obscurePassword),
+                                  onPressed: () => setState(
+                                      () => _obscurePassword = !_obscurePassword),
                                 ),
                               ),
-                              validator: (v) =>
-                                  (v == null || v.isEmpty)
-                                      ? 'Password is required'
-                                      : null,
+                              validator: (v) => (v == null || v.isEmpty)
+                                  ? 'Password is required' : null,
                             ),
 
                             // Error message
@@ -230,25 +220,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.red.shade50,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                      color: Colors.red.shade200),
+                                  border: Border.all(color: Colors.red.shade200),
                                 ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.warning_amber_rounded,
-                                        color: Colors.red.shade600,
-                                        size: 18),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        _errorMessage!,
+                                child: Row(children: [
+                                  Icon(Icons.warning_amber_rounded,
+                                      color: Colors.red.shade600, size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(_errorMessage!,
                                         style: TextStyle(
                                             color: Colors.red.shade700,
-                                            fontSize: 13),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                            fontSize: 13)),
+                                  ),
+                                ]),
                               ),
                             ],
 
@@ -256,28 +240,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // Log In button
                             SizedBox(
-                              width: double.infinity,
-                              height: 50,
+                              width: double.infinity, height: 50,
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _handleLogin,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF1565C0),
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10)),
+                                      borderRadius: BorderRadius.circular(10)),
                                 ),
                                 child: _isLoading
                                     ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
+                                        width: 22, height: 22,
                                         child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2.5))
+                                            color: Colors.white, strokeWidth: 2.5))
                                     : const Text('Log In',
                                         style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600)),
+                                            fontSize: 16, fontWeight: FontWeight.w600)),
                               ),
                             ),
 
@@ -285,35 +264,48 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // Create Account button
                             SizedBox(
-                              width: double.infinity,
-                              height: 50,
+                              width: double.infinity, height: 50,
                               child: OutlinedButton(
                                 onPressed: () => Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (_) =>
-                                          const RegisterScreen()),
+                                      builder: (_) => const RegisterScreen()),
                                 ),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: const Color(0xFF1565C0),
-                                  side: const BorderSide(
-                                      color: Color(0xFF1565C0)),
+                                  side: const BorderSide(color: Color(0xFF1565C0)),
                                   shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10)),
+                                      borderRadius: BorderRadius.circular(10)),
                                 ),
                                 child: const Text('Create Account',
                                     style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600)),
+                                        fontSize: 16, fontWeight: FontWeight.w600)),
                               ),
                             ),
 
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 12),
+
+                            // Staff quick access
+                            SizedBox(
+                              width: double.infinity, height: 50,
+                              child: TextButton.icon(
+                                icon: const Icon(Icons.badge_outlined, size: 18),
+                                label: const Text('Staff / Nurse Access →'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: const Color(0xFF1565C0),
+                                ),
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const StaffDashboardScreen()),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 8),
                             const Center(
                               child: Text('Successful login opens OPD Search.',
-                                  style: TextStyle(
-                                      color: Colors.grey, fontSize: 12)),
+                                  style: TextStyle(color: Colors.grey, fontSize: 12)),
                             ),
                           ],
                         ),

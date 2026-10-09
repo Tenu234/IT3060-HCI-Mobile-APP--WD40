@@ -81,6 +81,8 @@ exports.login = async (req, res) => {
 
     const token = generateToken(user);
 
+    console.log('Login response role:', user.role); // debug
+
     return res.status(200).json({
       token,
       id: user._id,
