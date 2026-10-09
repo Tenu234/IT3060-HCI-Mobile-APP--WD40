@@ -12,6 +12,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _nicController = TextEditingController();
   final _ageController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -38,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _emailController.dispose();
     _nicController.dispose();
     _ageController.dispose();
     _phoneController.dispose();
@@ -58,7 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       await AuthService.registerUser(
         name: _nameController.text.trim(),
-        email: '${_nicController.text.trim()}@opd.lk', // use NIC as email key
+        email: _emailController.text.trim(),
         password: _passwordController.text,
         phone: _phoneController.text.trim(),
         nic: _nicController.text.trim(),
@@ -189,6 +191,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         decoration: _inputDecoration('As shown on your NIC'),
                         validator: (v) => (v == null || v.trim().isEmpty)
                             ? 'Full name is required' : null,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Email
+                      _label('Email Address'),
+                      TextFormField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: _inputDecoration('example@email.com'),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Email is required';
+                          if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) {
+                            return 'Enter a valid email address';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
 

@@ -172,14 +172,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // NIC field
-                            const Text('NIC or mobile number',
-                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                            const Text('NIC, email or mobile number',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14)),
                             const SizedBox(height: 8),
                             TextFormField(
                               controller: _nicController,
-                              decoration: _inputDecoration('Enter NIC or +94 mobile'),
-                              validator: (v) => (v == null || v.trim().isEmpty)
-                                  ? 'This field is required' : null,
+                              decoration: _inputDecoration(
+                                  'Enter NIC, email or +94 mobile'),
+                              validator: (v) =>
+                                  (v == null || v.trim().isEmpty)
+                                      ? 'This field is required'
+                                      : null,
                             ),
                             const SizedBox(height: 16),
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../models/appointment_model.dart';
 import '../services/appointment_service.dart';
+import 'booking_confirmation_screen.dart';
 
 class BookingWizardScreen extends StatefulWidget {
   final UserModel user;
@@ -37,9 +38,12 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
 
   Future<void> _confirm() async {
     setState(() => _isLoading = true);
+    final appointmentId = 'A-${DateTime.now().millisecondsSinceEpoch % 10000}';
+    final queueNumber = 10 + (DateTime.now().millisecondsSinceEpoch % 40).toInt();
+
     await AppointmentService.bookAppointment(
       AppointmentModel(
-        id: 'A${DateTime.now().millisecondsSinceEpoch}',
+        id: appointmentId,
         hospitalName: widget.hospitalName,
         opdName: widget.opdName,
         doctorName: _selectedDoctor!,
@@ -49,23 +53,21 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
       ),
     );
     setState(() => _isLoading = false);
+
     if (mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          title: const Text('Booking Confirmed'),
-          content: const Text('Your appointment has been booked successfully.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // close dialog
-                Navigator.pop(context); // back to search
-                Navigator.pop(context); // back to dashboard
-              },
-              child: const Text('Done'),
-            ),
-          ],
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BookingConfirmationScreen(
+            user: widget.user,
+            hospitalName: widget.hospitalName,
+            opdName: widget.opdName,
+            doctorName: _selectedDoctor!,
+            date: _selectedDate!,
+            timeSlot: _selectedSlot!,
+            appointmentId: appointmentId,
+            queueNumber: queueNumber,
+          ),
         ),
       );
     }
