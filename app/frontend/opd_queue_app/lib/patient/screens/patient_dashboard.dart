@@ -16,13 +16,22 @@ class PatientDashboard extends StatefulWidget {
   State<PatientDashboard> createState() => _PatientDashboardState();
 }
 
-class _PatientDashboardState extends State<PatientDashboard> {
+class _PatientDashboardState extends State<PatientDashboard>
+    with SingleTickerProviderStateMixin {
   late Future<List<AppointmentModel>> _appointmentsFuture;
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _reload();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _reload() {
@@ -31,234 +40,378 @@ class _PatientDashboardState extends State<PatientDashboard> {
     });
   }
 
-  Widget _statChip(String label, int count, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Column(
-          children: [
-            Text('$count',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
-            Text(label, style: TextStyle(fontSize: 11, color: color)),
-          ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF0F4FF),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        leading: const Icon(Icons.menu),
+        title: const Text('My Appointments',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => PatientProfileScreen(user: widget.user)),
+              );
+              _reload();
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.science_outlined),
+            tooltip: 'Lab Reports',
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const LabReportsScreen())),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (_) => const LoginScreen())),
+          ),
+        ],
+      ),
+      body: FutureBuilder<List<AppointmentModel>>(
+        future: _appointmentsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.wifi_off_outlined,
+                      size: 48, color: Colors.grey),
+                  const SizedBox(height: 8),
+                  const Text('Could not load appointments.'),
+                  TextButton(onPressed: _reload, child: const Text('Retry')),
+                ],
+              ),
+            );
+          }
+
+          final all = snapshot.data ?? [];
+          final upcoming = all
+              .where((a) => a.status == 'upcoming')
+              .toList();
+          final past = all
+              .where((a) =>
+                  a.status == 'completed' || a.status == 'cancelled')
+              .toList();
+
+          return Column(
+            children: [
+              // Tab bar
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0F4FF),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                    labelColor: const Color(0xFF1565C0),
+                    unselectedLabelColor: Colors.grey,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    dividerColor: Colors.transparent,
+                    tabs: [
+                      Tab(text: 'Upcoming (${upcoming.length})'),
+                      Tab(text: 'Past Visits (${past.length})'),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Tab content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildList(upcoming, isUpcoming: true),
+                    _buildList(past, isUpcoming: false),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+
+      // New Appointment button
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+        child: SizedBox(
+          height: 52,
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.add),
+            label: const Text('New Appointment',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1565C0),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
+            ),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => OpdSearchScreen(user: widget.user)),
+              );
+              _reload();
+            },
+          ),
         ),
       ),
     );
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'upcoming':   return Colors.teal;
-      case 'completed':  return Colors.grey;
-      case 'cancelled':  return Colors.red;
-      default:           return Colors.grey;
+  Widget _buildList(List<AppointmentModel> appointments,
+      {required bool isUpcoming}) {
+    if (appointments.isEmpty) {
+      return Center(
+        child: Text(
+          isUpcoming
+              ? 'No upcoming appointments.'
+              : 'No past visits yet.',
+          style: const TextStyle(color: Colors.grey),
+        ),
+      );
     }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      itemCount: appointments.length,
+      itemBuilder: (context, i) {
+        final apt = appointments[i];
+        return _appointmentCard(apt, isUpcoming: isUpcoming, index: i);
+      },
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget _appointmentCard(AppointmentModel apt,
+      {required bool isUpcoming, required int index}) {
+    final queueNo = 20 + index * 5;
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('My Dashboard'),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            tooltip: 'Profile',
-            onPressed: () async {
-              await Navigator.push(context, MaterialPageRoute(
-                builder: (_) => PatientProfileScreen(user: widget.user),
-              ));
-              _reload();
-            },
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Timeline
+          SizedBox(
+            width: 24,
+            child: Column(
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isUpcoming
+                        ? const Color(0xFF1565C0)
+                        : Colors.grey.shade400,
+                    border: Border.all(
+                        color: isUpcoming
+                            ? const Color(0xFFBBDEFB)
+                            : Colors.grey.shade300,
+                        width: 3),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: Colors.grey.shade300,
+                  ),
+                ),
+              ],
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () => Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (_) => const LoginScreen())),
+          const SizedBox(width: 12),
+
+          // Card
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Date + status
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(apt.date,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15)),
+                      _statusBadge(apt.status),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+
+                  // OPD name
+                  Text(apt.opdName,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 2),
+
+                  // Hospital
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined,
+                          size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(apt.hospitalName,
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 13)),
+                    ],
+                  ),
+
+                  // Queue info (upcoming only)
+                  if (isUpcoming) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF8E1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.access_time,
+                              size: 15, color: Color(0xFFFF8F00)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Queue No: $queueNo  •  ${apt.timeSlot}',
+                            style: const TextStyle(
+                              color: Color(0xFFE65100),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 12),
+
+                  // Buttons
+                  SizedBox(
+                    width: 140,
+                    height: 36,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                AppointmentDetailScreen(appointment: apt),
+                          ),
+                        );
+                        _reload();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1565C0),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                      ),
+                      child: const Text('View Details'),
+                    ),
+                  ),
+
+                  if (isUpcoming) ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 140,
+                      height: 36,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Queue tracking coming soon.')),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF1565C0),
+                          side: const BorderSide(color: Color(0xFF1565C0)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
+                        ),
+                        child: const Text('Track Queue'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async => _reload(),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Welcome back,',
-                        style: TextStyle(color: Colors.white.withOpacity(0.8))),
-                    const SizedBox(height: 4),
-                    Text(widget.user.name,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
+    );
+  }
 
-              // Book appointment button
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('Book New Appointment'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  onPressed: () async {
-                    await Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => OpdSearchScreen(user: widget.user),
-                    ));
-                    _reload();
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Lab reports button
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.science_outlined),
-                  label: const Text('My Lab Reports'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.colorScheme.primary,
-                    side: BorderSide(color: theme.colorScheme.primary),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => const LabReportsScreen(),
-                  )),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              Text('My Appointments',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-
-              // Appointments list
-              FutureBuilder<List<AppointmentModel>>(
-                future: _appointmentsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Column(
-                          children: [
-                            const Icon(Icons.wifi_off_outlined, size: 48, color: Colors.grey),
-                            const SizedBox(height: 12),
-                            const Text('Could not load appointments.',
-                                style: TextStyle(color: Colors.grey)),
-                            const SizedBox(height: 12),
-                            TextButton(onPressed: _reload, child: const Text('Retry')),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  final appointments = snapshot.data ?? [];
-
-                  // Stats row
-                  final upcoming  = appointments.where((a) => a.status == 'upcoming').length;
-                  final completed = appointments.where((a) => a.status == 'completed').length;
-                  final cancelled = appointments.where((a) => a.status == 'cancelled').length;
-
-                  return Column(
-                    children: [
-                      if (appointments.isNotEmpty) ...[
-                        Row(
-                          children: [
-                            _statChip('Upcoming',  upcoming,  Colors.teal),
-                            const SizedBox(width: 8),
-                            _statChip('Completed', completed, Colors.grey),
-                            const SizedBox(width: 8),
-                            _statChip('Cancelled', cancelled, Colors.red),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      if (appointments.isEmpty)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32),
-                            child: Text('No appointments yet.'),
-                          ),
-                        )
-                      else
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: appointments.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 10),
-                          itemBuilder: (context, i) {
-                            final apt = appointments[i];
-                            return Card(
-                              elevation: 1,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                title: Text(apt.opdName,
-                                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                                subtitle: Text('${apt.hospitalName}\n${apt.date}  •  ${apt.timeSlot}'),
-                                isThreeLine: true,
-                                trailing: Chip(
-                                  label: Text(apt.status.toUpperCase(),
-                                      style: const TextStyle(color: Colors.white, fontSize: 11)),
-                                  backgroundColor: _statusColor(apt.status),
-                                  padding: EdgeInsets.zero,
-                                ),
-                                onTap: () async {
-                                  await Navigator.push(context, MaterialPageRoute(
-                                    builder: (_) => AppointmentDetailScreen(appointment: apt),
-                                  ));
-                                  _reload();
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
+  Widget _statusBadge(String status) {
+    Color color;
+    String label;
+    switch (status) {
+      case 'upcoming':
+        color = Colors.green;
+        label = 'CONFIRMED';
+        break;
+      case 'cancelled':
+        color = Colors.red;
+        label = 'CANCELLED';
+        break;
+      default:
+        color = Colors.grey;
+        label = 'COMPLETED';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.4)),
       ),
+      child: Text(label,
+          style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3)),
     );
   }
 }
