@@ -16,6 +16,8 @@ class AuthService {
     {'email': 'nurse@test.com',    'password': '123456', 'role': 'nurse',   'name': 'Nurse Anna',   'id': '3'},
     {'email': 'admin@test.com',    'password': '123456', 'role': 'admin',   'name': 'Admin Root',   'id': '4'},
     {'email': 'staff@test.com',    'password': '123456', 'role': 'staff',   'name': 'Staff User',   'id': '5'},
+    {'email': 'madusha@gmail.com', 'password': '123456', 'role': 'staff',   'name': 'Madusha',      'id': '6'},
+    {'email': 'staff@test.com',    'password': '123456', 'role': 'staff',   'name': 'Staff User',   'id': '5'},
   ];
 
   static Future<UserModel> login(String email, String password) async {
