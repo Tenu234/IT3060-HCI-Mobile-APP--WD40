@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
-import '../../features/staff/screens/staff_dashboard_screen.dart';
+import '../login_screen.dart';
 
 class NurseDashboard extends StatelessWidget {
   final UserModel user;
@@ -8,6 +8,24 @@ class NurseDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const StaffDashboardScreen();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Nurse Dashboard'),
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+            ),
+          ),
+        ],
+      ),
+      body: Center(
+        child: Text('Welcome, ${user.name}'),
+      ),
+    );
   }
 }
