@@ -9,7 +9,8 @@ require('dotenv').config();
 const bookingRoutes = require('./routes/bookingRoutes');
 const authRoutes = require('./routes/auth.routes');
 const appointmentRoutes = require('./routes/appointment.routes');
-const labReportRoutes   = require('./routes/labReport.routes');
+const labReportRoutes = require('./routes/labReport.routes');
+const doctorRoutes = require('./routes/doctor.routes');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/lab-reports', labReportRoutes);
+app.use('/api/doctor', doctorRoutes);
 
 // MongoDB connection
 mongoose

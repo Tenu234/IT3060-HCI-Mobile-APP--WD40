@@ -71,9 +71,10 @@ class _LoginScreenState extends State<LoginScreen> {
         dashboard = OpdSearchScreen(user: user);
         break;
     }
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => dashboard),
+      (route) => false,
     );
   }
 
