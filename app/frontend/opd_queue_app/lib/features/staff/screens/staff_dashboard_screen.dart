@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../theme.dart';
+import '../../../screens/login_screen.dart';
 import '../services/staff_api_service.dart';
 import '../models/walk_in_booking.dart';
 import 'walk_in_booking_screen.dart';
@@ -48,13 +49,63 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
     return '${days[n.weekday - 1]}, ${n.day} ${months[n.month - 1]} ${n.year}';
   }
 
+  void _onLogout() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: Colors.red, size: 22),
+            SizedBox(width: 8),
+            Text('End Staff Session?',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to log out of the Staff Portal?',
+          style: TextStyle(color: Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            child: const Text('Logout Session'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kSurface,
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: kPrimary))
-          : RefreshIndicator(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _onLogout();
+      },
+      child: Scaffold(
+        backgroundColor: kSurface,
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: kPrimary))
+            : RefreshIndicator(
               color: kPrimary,
               onRefresh: _load,
               child: CustomScrollView(
@@ -160,6 +211,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                 ],
               ),
             ),
+      ),
     );
   }
 
@@ -221,18 +273,35 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                           ],
                         ),
                       ]),
-                      // Refresh
-                      GestureDetector(
-                        onTap: _load,
-                        child: Container(
-                          padding: const EdgeInsets.all(9),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(10),
+                      // Actions: Refresh + Logout
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: _load,
+                            child: Container(
+                              padding: const EdgeInsets.all(9),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.refresh_rounded,
+                                  color: Colors.white, size: 20),
+                            ),
                           ),
-                          child: const Icon(Icons.refresh_rounded,
-                              color: Colors.white, size: 20),
-                        ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: _onLogout,
+                            child: Container(
+                              padding: const EdgeInsets.all(9),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.logout_rounded,
+                                  color: Colors.white, size: 20),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
