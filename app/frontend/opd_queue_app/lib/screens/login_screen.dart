@@ -6,7 +6,7 @@ import 'dashboards/doctor_dashboard.dart';
 import 'dashboards/nurse_dashboard.dart';
 import 'dashboards/admin_dashboard.dart';
 import 'register_screen.dart';
-import '../features/staff/screens/staff_dashboard_screen.dart';
+import '../patient/screens/opd_search_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -59,15 +59,12 @@ class _LoginScreenState extends State<LoginScreen> {
       case 'nurse':
         dashboard = NurseDashboard(user: user);
         break;
-      case 'staff':
-        dashboard = const StaffDashboardScreen();
-        break;
       case 'admin':
         dashboard = AdminDashboard(user: user);
         break;
       case 'patient':
       default:
-        dashboard = PatientDashboard(user: user);
+        dashboard = OpdSearchScreen(user: user);
         break;
     }
     Navigator.pushReplacement(
@@ -81,8 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
         hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
         filled: true,
         fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -138,7 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            // Body
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -153,7 +148,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                     const SizedBox(height: 24),
 
-                    // Card
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -171,24 +165,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // NIC field
                             const Text('NIC, email or mobile number',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14)),
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                             const SizedBox(height: 8),
                             TextFormField(
                               controller: _nicController,
-                              decoration: _inputDecoration(
-                                  'Enter NIC, email or +94 mobile'),
-                              validator: (v) =>
-                                  (v == null || v.trim().isEmpty)
-                                      ? 'This field is required'
-                                      : null,
+                              decoration: _inputDecoration('Enter NIC, email or +94 mobile'),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'This field is required' : null,
                             ),
                             const SizedBox(height: 16),
 
-                            // Password field
                             const Text('Password',
                                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                             const SizedBox(height: 8),
@@ -211,7 +198,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? 'Password is required' : null,
                             ),
 
-                            // Error message
                             if (_errorMessage != null) ...[
                               const SizedBox(height: 12),
                               Container(
@@ -229,8 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Expanded(
                                     child: Text(_errorMessage!,
                                         style: TextStyle(
-                                            color: Colors.red.shade700,
-                                            fontSize: 13)),
+                                            color: Colors.red.shade700, fontSize: 13)),
                                   ),
                                 ]),
                               ),
@@ -238,7 +223,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 20),
 
-                            // Log In button
                             SizedBox(
                               width: double.infinity, height: 50,
                               child: ElevatedButton(
@@ -262,7 +246,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 12),
 
-                            // Create Account button
                             SizedBox(
                               width: double.infinity, height: 50,
                               child: OutlinedButton(
@@ -283,26 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
 
-                            const SizedBox(height: 12),
-
-                            // Staff quick access
-                            SizedBox(
-                              width: double.infinity, height: 50,
-                              child: TextButton.icon(
-                                icon: const Icon(Icons.badge_outlined, size: 18),
-                                label: const Text('Staff / Nurse Access →'),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFF1565C0),
-                                ),
-                                onPressed: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const StaffDashboardScreen()),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 16),
                             const Center(
                               child: Text('Successful login opens OPD Search.',
                                   style: TextStyle(color: Colors.grey, fontSize: 12)),

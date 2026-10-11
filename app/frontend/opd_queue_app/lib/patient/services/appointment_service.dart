@@ -3,9 +3,9 @@ import 'package:http/http.dart' as http;
 import '../models/appointment_model.dart';
 
 class AppointmentService {
-  static const String _baseUrl = 'http://10.0.2.2:5000/api/appointments';
-
-  static String? _token; // set this after login
+  static const bool _useMock = true; // set false when backend is running
+  static const String _baseUrl = 'http://localhost:5000/api/appointments';
+  static String? _token;
 
   static void setToken(String token) => _token = token;
 
@@ -14,7 +14,33 @@ class AppointmentService {
         'Authorization': 'Bearer $_token',
       };
 
+  // Mock data for testing without backend
+  static final List<AppointmentModel> _mockAppointments = [
+    AppointmentModel(
+      id: 'A001',
+      hospitalName: 'City General Hospital',
+      opdName: 'Cardiology OPD',
+      doctorName: 'Dr. Perera',
+      date: '2026-10-15',
+      timeSlot: '09:00 AM',
+      status: 'upcoming',
+    ),
+    AppointmentModel(
+      id: 'A002',
+      hospitalName: 'National Hospital',
+      opdName: 'Neurology OPD',
+      doctorName: 'Dr. Silva',
+      date: '2026-09-20',
+      timeSlot: '11:00 AM',
+      status: 'completed',
+    ),
+  ];
+
   static Future<List<AppointmentModel>> getMyAppointments() async {
+    if (_useMock) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return List.from(_mockAppointments);
+    }
     final response = await http.get(Uri.parse(_baseUrl), headers: _headers);
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -24,6 +50,11 @@ class AppointmentService {
   }
 
   static Future<void> bookAppointment(AppointmentModel appointment) async {
+    if (_useMock) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      _mockAppointments.add(appointment);
+      return;
+    }
     final response = await http.post(
       Uri.parse(_baseUrl),
       headers: _headers,
@@ -41,23 +72,40 @@ class AppointmentService {
   }
 
   static Future<void> cancelAppointment(String id) async {
-    final response = await http.patch(
-      Uri.parse('$_baseUrl/$id/cancel'),
-      headers: _headers,
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to cancel appointment.');
+    if (_useMock) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      final i = _mockAppointments.indexWhere((a) => a.id == id);
+      if (i != -1) {
+        final a = _mockAppointments[i];
+        _mockAppointments[i] = AppointmentModel(
+          id: a.id, hospitalName: a.hospitalName, opdName: a.opdName,
+          doctorName: a.doctorName, date: a.date, timeSlot: a.timeSlot,
+          status: 'cancelled',
+        );
+      }
+      return;
     }
+    await http.patch(Uri.parse('$_baseUrl/$id/cancel'), headers: _headers);
   }
 
   static Future<void> rescheduleAppointment(String id, String newDate, String newSlot) async {
-    final response = await http.patch(
+    if (_useMock) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      final i = _mockAppointments.indexWhere((a) => a.id == id);
+      if (i != -1) {
+        final a = _mockAppointments[i];
+        _mockAppointments[i] = AppointmentModel(
+          id: a.id, hospitalName: a.hospitalName, opdName: a.opdName,
+          doctorName: a.doctorName, date: newDate, timeSlot: newSlot,
+          status: 'upcoming',
+        );
+      }
+      return;
+    }
+    await http.patch(
       Uri.parse('$_baseUrl/$id/reschedule'),
       headers: _headers,
       body: jsonEncode({'date': newDate, 'timeSlot': newSlot}),
     );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to reschedule appointment.');
-    }
   }
 }

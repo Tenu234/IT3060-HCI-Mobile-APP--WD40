@@ -6,7 +6,7 @@ import '../patient/services/lab_report_service.dart';
 
 class AuthService {
   // Toggle this to false when your backend is ready, then set _baseUrl
-  static const bool _useMock = false;
+  static const bool _useMock = true;
   static const String _baseUrl = 'http://localhost:5000/api'; // web/desktop
 
   // ─── Mock users for testing all 4 roles ───────────────────────────────────

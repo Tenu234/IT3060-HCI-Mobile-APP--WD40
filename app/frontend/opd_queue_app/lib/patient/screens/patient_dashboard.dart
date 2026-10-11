@@ -52,14 +52,6 @@ class _PatientDashboardState extends State<PatientDashboard>
         title: const Text('My Appointments',
             style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
-          // Staff access button (visible only for staff accounts)
-          if (widget.user.email == 'tharumendis698@gmail.com')
-            IconButton(
-              icon: const Icon(Icons.dashboard_customize),
-              tooltip: 'Staff Dashboard',
-              onPressed: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const StaffDashboardScreen())),
-            ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             onPressed: () async {
