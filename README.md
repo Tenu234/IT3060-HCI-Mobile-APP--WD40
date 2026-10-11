@@ -5,7 +5,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-Mobile-02569B)
 ![Dart](https://img.shields.io/badge/Dart-Language-0175C2)
 ![Node.js](https://img.shields.io/badge/Node.js-Backend-339933)
-![SQLite](https://img.shields.io/badge/SQLite-Database-003B57)
+![MongoDB](https://img.shields.io/badge/MongoDB-Database-47A248)
 
 ---
 
@@ -72,7 +72,7 @@
 - **Express.js** — Web application framework for Node.js
 
 ### Database
-- **SQLite** — Embedded database for storing patient and booking data
+- **MongoDB** — NoSQL database for storing patient and booking data
 
 ---
 
@@ -92,17 +92,35 @@
 ```
 app/
 ├── backend/                    → Node.js + Express API
-│   ├── db.js                   → SQLite database and demo data
-│   ├── middleware/             → Authentication middleware
+│   ├── models/                 → MongoDB models
 │   ├── routes/                 → API routes
-│   └── index.js                → API entry point
+│   ├── controllers/            → Business logic
+│   └── server.js               → Entry point
 └── frontend/
     └── opd_queue_app/
         └── lib/
             ├── main.dart
-            ├── screens/        → Patient and admin screens
-            ├── services/       → API and authentication clients
-            └── widgets/        → Shared UI components
+            └── features/
+                ├── patient/    → W.M.P Weerasooriya
+                │   ├── models/
+                │   ├── screens/
+                │   ├── services/
+                │   └── widgets/
+                ├── doctor/     → NN WIJESINGHE
+                │   ├── models/
+                │   ├── screens/
+                │   ├── services/
+                │   └── widgets/
+                ├── staff/      → BMTP MENDIS
+                │   ├── models/
+                │   ├── screens/
+                │   ├── services/
+                │   └── widgets/
+                └── admin/      → RKAM Deshan
+                    ├── models/
+                    ├── screens/
+                    ├── services/
+                    └── widgets/
 ```
 
 ---
@@ -117,6 +135,7 @@ Before starting development, ensure you have the following installed:
 | **Dart SDK** | 3.x+ | Comes with Flutter | `dart --version` |
 | **Node.js** | v18+ | Backend runtime | `node -v` |
 | **npm** | v9+ | Package manager | `npm -v` |
+| **MongoDB** | 6+ | Database | `mongod --version` |
 | **Git** | Any | Version control | `git --version` |
 
 **IDE:** Android Studio or VS Code with Flutter & Dart extensions
@@ -152,8 +171,8 @@ npm install
 
 Create a `.env` file inside `app/backend/`:
 ```env
-PORT=3000
-JWT_SECRET=replace-with-a-long-random-secret
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/opd_queue_db
 ```
 
 Start the backend server:
@@ -175,8 +194,8 @@ flutter run                  # Run on connected device/emulator
 ### Backend Server
 ```bash
 cd app/backend
-npm start                    # Start server on port 3000
-npm run dev                  # Start with Node.js watch mode
+npm start                    # Start server on port 5000
+npm run dev                  # Start with nodemon (auto-restart)
 ```
 
 ---

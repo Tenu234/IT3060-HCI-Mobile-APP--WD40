@@ -1,4 +1,4 @@
-# client
+# opd_queue_app
 
 A new Flutter project.
 

@@ -1,53 +1,23 @@
 import 'package:flutter/material.dart';
-import 'router.dart';
 import 'screens/login_screen.dart';
-import 'services/auth.dart';
-import 'theme.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const OpdApp());
+  runApp(const MyApp());
 }
 
-class OpdApp extends StatelessWidget {
-  const OpdApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Government Hospital OPD',
+      title: 'OPD Queue',
       debugShowCheckedModeBanner: false,
-      theme: buildTheme(),
-      home: const _Boot(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
+      ),
+      home: const LoginScreen(),
     );
   }
-}
-
-/// Restores a saved session (if any) and opens the right home screen.
-class _Boot extends StatefulWidget {
-  const _Boot();
-  @override
-  State<_Boot> createState() => _BootState();
-}
-
-class _BootState extends State<_Boot> {
-  @override
-  void initState() {
-    super.initState();
-    _start();
-  }
-
-  Future<void> _start() async {
-    await Auth.i.restore();
-    if (!mounted) return;
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (_) => Auth.i.loggedIn && Auth.i.role == 'admin'
-          ? homeForRole(Auth.i.role)
-          : const LoginScreen(),
-    ));
-  }
-
-  @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: CircularProgressIndicator()));
 }

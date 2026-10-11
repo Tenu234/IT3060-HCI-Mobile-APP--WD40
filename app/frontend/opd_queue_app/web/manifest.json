@@ -1,6 +1,6 @@
 {
-    "name": "client",
-    "short_name": "client",
+    "name": "opd_queue_app",
+    "short_name": "opd_queue_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
