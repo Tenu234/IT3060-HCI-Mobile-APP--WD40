@@ -220,8 +220,8 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
       decoration: const BoxDecoration(
         color: kPrimary,
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
         ),
       ),
       child: Stack(
@@ -230,7 +230,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
           Positioned(
             top: -40, right: -40,
             child: Container(
-              width: 160, height: 160,
+              width: 170, height: 170,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.06),
@@ -239,7 +239,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+              padding: const EdgeInsets.fromLTRB(20, 22, 20, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -249,15 +249,15 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                       // Avatar + greeting
                       Row(children: [
                         Container(
-                          width: 44, height: 44,
+                          width: 50, height: 50,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.white.withOpacity(0.2),
                           ),
                           child: const Icon(Icons.person_rounded,
-                              color: Colors.white, size: 24),
+                              color: Colors.white, size: 28),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 14),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -268,7 +268,7 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
                             const Text('NHSL Staff Portal',
                                 style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 17,
+                                    fontSize: 19,
                                     fontWeight: FontWeight.bold)),
                           ],
                         ),
@@ -347,27 +347,30 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: kCardDecoration(),
         child: Column(
           children: [
             Container(
-              width: 36, height: 36,
+              width: 42, height: 42,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 18),
+              child: Icon(icon, color: color, size: 21),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text('$value',
                 style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 27,
                     fontWeight: FontWeight.bold,
                     color: color)),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(label,
-                style: const TextStyle(fontSize: 11, color: kTextMuted)),
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: kTextMuted)),
           ],
         ),
       ),
@@ -393,22 +396,22 @@ class _ActionCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
           decoration: kCardDecoration(),
           child: Row(children: [
             Container(
-              width: 42, height: 42,
+              width: 48, height: 48,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(icon, color: color, size: 22),
+              child: Icon(icon, color: color, size: 25),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Text(label,
                   style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: kText)),
             ),

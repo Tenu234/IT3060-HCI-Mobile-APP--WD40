@@ -63,177 +63,272 @@ class _OpdSearchScreenState extends State<OpdSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF1F5F9), // Soothing medical background
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: const Color(0xFF1A5C6B), // Rich medical teal
+        foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => PatientDashboard(user: widget.user)),
+            MaterialPageRoute(
+                builder: (_) => PatientDashboard(user: widget.user)),
           ),
         ),
-        title: const Text('Book Appointment',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: Colors.grey.shade200),
+        title: const Text(
+          'Book OPD Appointment',
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
         ),
+        centerTitle: true,
       ),
       body: Column(
         children: [
-          // Step indicator
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: RichText(
-              text: const TextSpan(
-                style: TextStyle(fontSize: 13),
-                children: [
-                  TextSpan(
-                    text: 'Step 1 of 3: ',
-                    style: TextStyle(
-                        color: Color(0xFF00897B), fontWeight: FontWeight.w600),
-                  ),
-                  TextSpan(
-                    text: 'Select OPD',
-                    style: TextStyle(color: Colors.black54),
-                  ),
-                ],
+          // Step banner
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade200),
               ),
             ),
+            child: Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0F2F1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Step 1 of 3',
+                    style: TextStyle(
+                      color: Color(0xFF00796B),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Select Hospital & OPD Clinic',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF334155),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Search bar
-                  TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search Hospital or OPD...',
-                      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    onChanged: (v) {
-                      setState(() {
-                        _query = v.toLowerCase();
-                        _selectedHospital = null;
-                        _selectedOpd = null;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Select Hospital
-                  _fieldLabel('Select Hospital'),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: _selectedHospital,
-                    hint: const Text('Select a hospital'),
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
-                    ),
-                    items: _filteredHospitals
-                        .map((h) => DropdownMenuItem(
-                              value: h,
-                              child: Text(h, overflow: TextOverflow.ellipsis),
-                            ))
-                        .toList(),
-                    onChanged: (v) => setState(() {
-                      _selectedHospital = v;
-                      _selectedOpd = null;
-                    }),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Select OPD
-                  _fieldLabel('Select OPD / Clinic'),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<String>(
-                    value: _selectedOpd,
-                    hint: const Text('Select OPD'),
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: _selectedOpd != null
-                              ? const Color(0xFF00897B)
-                              : Colors.grey.shade400,
-                          width: _selectedOpd != null ? 1.5 : 1,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: _selectedOpd != null
-                              ? const Color(0xFF00897B)
-                              : Colors.grey.shade400,
-                          width: _selectedOpd != null ? 1.5 : 1,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
+                      ],
                     ),
-                    items: _opdsForHospital
-                        .map((o) => DropdownMenuItem(
-                              value: o['name'],
-                              child: Text(o['name']!),
-                            ))
-                        .toList(),
-                    onChanged: _selectedHospital == null
-                        ? null
-                        : (v) => setState(() => _selectedOpd = v),
-                  ),
-
-                  // Info banner
-                  if (_opdInfo != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE0F2F1),
-                        borderRadius: BorderRadius.circular(8),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search Hospital or OPD Clinic...',
+                        hintStyle:
+                            TextStyle(color: Colors.grey[400], fontSize: 14),
+                        prefixIcon: const Icon(Icons.search_rounded,
+                            color: Color(0xFF0D9488)),
+                        border: InputBorder.none,
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(Icons.info_outline,
-                              color: Color(0xFF00897B), size: 18),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(_opdInfo!,
-                                style: const TextStyle(
-                                    color: Color(0xFF00695C), fontSize: 13)),
+                      onChanged: (v) {
+                        setState(() {
+                          _query = v.toLowerCase();
+                          _selectedHospital = null;
+                          _selectedOpd = null;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Selection Card Container
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Select Hospital
+                        _fieldLabel('Select Hospital'),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: _selectedHospital,
+                          hint: const Text('Choose a government hospital'),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.local_hospital_rounded,
+                                color: Color(0xFF1A5C6B), size: 20),
+                            filled: true,
+                            fillColor: const Color(0xFFF8FAFC),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFCBD5E1)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFF1A5C6B), width: 1.5),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 13),
+                          ),
+                          items: _filteredHospitals
+                              .map((h) => DropdownMenuItem(
+                                    value: h,
+                                    child: Text(h,
+                                        overflow: TextOverflow.ellipsis),
+                                  ))
+                              .toList(),
+                          onChanged: (v) => setState(() {
+                            _selectedHospital = v;
+                            _selectedOpd = null;
+                          }),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Select OPD
+                        _fieldLabel('Select OPD Clinic'),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: _selectedOpd,
+                          hint: Text(_selectedHospital == null
+                              ? 'Select a hospital first'
+                              : 'Choose OPD specialty'),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(
+                                Icons.medical_services_rounded,
+                                color: Color(0xFF1A5C6B),
+                                size: 20),
+                            filled: true,
+                            fillColor: const Color(0xFFF8FAFC),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  const BorderSide(color: Color(0xFFCBD5E1)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: _selectedOpd != null
+                                    ? const Color(0xFF0D9488)
+                                    : const Color(0xFFE2E8F0),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: Color(0xFF1A5C6B), width: 1.5),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 13),
+                          ),
+                          items: _opdsForHospital
+                              .map((o) => DropdownMenuItem(
+                                    value: o['name'],
+                                    child: Text(o['name']!),
+                                  ))
+                              .toList(),
+                          onChanged: _selectedHospital == null
+                              ? null
+                              : (v) => setState(() => _selectedOpd = v),
+                        ),
+
+                        // Info banner
+                        if (_opdInfo != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0FDFA), // Soft mint
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: const Color(0xFF99F6E4)),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.info_rounded,
+                                    color: Color(0xFF0D9488), size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    _opdInfo!,
+                                    style: const TextStyle(
+                                      color: Color(0xFF0F766E),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
           ),
 
           // Continue button
-          Padding(
-            padding: const EdgeInsets.all(16),
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, -3),
+                ),
+              ],
+            ),
             child: SizedBox(
               width: double.infinity,
               height: 50,
@@ -251,20 +346,22 @@ class _OpdSearchScreenState extends State<OpdSearchScreen> {
                         )
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF00897B),
+                  backgroundColor: const Color(0xFF1A5C6B),
                   foregroundColor: Colors.white,
                   disabledBackgroundColor: Colors.grey.shade300,
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('Continue to Date & Slot',
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
+                            fontSize: 15, fontWeight: FontWeight.bold)),
                     SizedBox(width: 8),
-                    Icon(Icons.arrow_forward, size: 18),
+                    Icon(Icons.arrow_forward_rounded, size: 18),
                   ],
                 ),
               ),

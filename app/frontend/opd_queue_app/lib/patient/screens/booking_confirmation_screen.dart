@@ -33,33 +33,19 @@ class BookingConfirmationScreen extends StatelessWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: const Icon(Icons.close_rounded, color: Colors.white),
           onPressed: () => Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => PatientDashboard(user: user)),
             (_) => false,
           ),
         ),
-        title: const Text('Booking Confirmed'),
+        title: const Text('Booking Confirmed',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: const Color(0xFF1A5C6B),
+        foregroundColor: Colors.white,
         elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            height: 1,
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Color(0xFF2196F3),
-                  width: 1.5,
-                  style: BorderStyle.solid,
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
       body: Column(
         children: [
