@@ -807,7 +807,9 @@ class _DoneList extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 10),
           decoration: kCardDecoration(),
-          child: ListTile(
+          child: Material(
+            color: Colors.transparent,
+            child: ListTile(
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             leading: Container(
@@ -841,7 +843,8 @@ class _DoneList extends StatelessWidget {
                       fontSize: 11, color: c, fontWeight: FontWeight.bold)),
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }

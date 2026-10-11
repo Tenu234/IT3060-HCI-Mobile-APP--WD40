@@ -706,7 +706,9 @@ class _ConsultationNotesAndDispatchScreenState
       decoration: DoctorTheme.cardDecoration(
         borderColor: isUrgent ? DoctorTheme.danger.withValues(alpha: 0.3) : DoctorTheme.border,
       ),
-      child: ListTile(
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         leading: Container(
           width: 36,
@@ -736,7 +738,8 @@ class _ConsultationNotesAndDispatchScreenState
           onPressed: () => _dismissAlert(alert),
         ),
       ),
-    );
+    ),
+  );
   }
 
   String _formatTime(DateTime dt) {
