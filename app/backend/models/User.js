@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     nic:   { type: String, required: true, unique: true },
     // Role is never accepted from request body on public routes
-    role:  { type: String, enum: ['patient', 'doctor', 'nurse', 'admin'], default: 'patient' },
+    role:  { type: String, enum: ['patient', 'doctor', 'nurse', 'admin', 'staff'], default: 'patient' },
   },
   { timestamps: true }
 );

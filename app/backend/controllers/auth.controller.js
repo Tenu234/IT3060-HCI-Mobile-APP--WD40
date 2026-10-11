@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
     }
 
     // Only allow valid roles
-    const allowedRoles = ['patient', 'doctor', 'nurse', 'admin'];
+    const allowedRoles = ['patient', 'doctor', 'nurse', 'admin', 'staff'];
     const assignedRole = allowedRoles.includes(role) ? role : 'patient';
 
     const existingUser = await User.findOne({ $or: [{ email }, { nic }] });
