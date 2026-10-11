@@ -187,11 +187,48 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Calendar
+          // Date picker button
           const Text('Select Date',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
           const SizedBox(height: 12),
-          _buildCalendar(),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.calendar_today_outlined,
+                color: Color(0xFF00897B), size: 18),
+            label: Text(
+              _selectedDate == null ? 'Pick a date' : _formattedDate,
+              style: const TextStyle(color: Color(0xFF00897B)),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFF00897B)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25)),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: DateTime.now().add(const Duration(days: 1)),
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 60)),
+                builder: (ctx, child) => Theme(
+                  data: Theme.of(ctx).copyWith(
+                    colorScheme: const ColorScheme.light(
+                      primary: Color(0xFF00897B),
+                    ),
+                  ),
+                  child: child!,
+                ),
+              );
+              if (picked != null) {
+                setState(() {
+                  _selectedDate = picked;
+                  _selectedSlot = null;
+                  _focusedMonth = picked;
+                });
+              }
+            },
+          ),
           const SizedBox(height: 20),
 
           // Slots
