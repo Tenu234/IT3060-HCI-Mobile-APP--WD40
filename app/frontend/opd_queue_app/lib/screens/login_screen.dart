@@ -8,7 +8,6 @@ import 'dashboards/admin_dashboard.dart';
 import 'register_screen.dart';
 import '../patient/screens/opd_search_screen.dart';
 import '../features/staff/screens/staff_dashboard_screen.dart';
-import 'admin_shell.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -65,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         dashboard = const StaffDashboardScreen();
         break;
       case 'admin':
-        dashboard = const AdminShell();
+        dashboard = AdminDashboard(user: user);
         break;
       case 'patient':
       default:

@@ -1,49 +1,102 @@
 import 'package:flutter/material.dart';
 
-class C {
-  static const brand = Color(0xFF1865F2);
-  static const bg = Color(0xFFF3F6FB);
-  static const ink = Color(0xFF14233C);
-  static const muted = Color(0xFF5B6B82);
-  static const border = Color(0xFFD5E3F5);
-  static const blueSoft = Color(0xFFE8F0FE);
-  static const green = Color(0xFF1B7F3B);
-  static const greenSoft = Color(0xFFE8F5E9);
-  static const red = Color(0xFFC62828);
-  static const redSoft = Color(0xFFFDECEA);
-  static const amber = Color(0xFF9A6700);
-  static const yellowSoft = Color(0xFFFFF9C4);
-  static const grey = Color(0xFF6B7280);
-  static const greySoft = Color(0xFFEEF0F3);
+// ── Brand colours ──────────────────────────────────────────────────────────
+const kPrimary    = Color(0xFF006D77);
+const kPrimaryDark= Color(0xFF004D56);
+const kAccent     = Color(0xFF83C5BE);
+const kSurface    = Color(0xFFF5F7FA);
+const kCard       = Colors.white;
+const kText       = Color(0xFF1A1A2E);
+const kTextMuted  = Color(0xFF6B7280);
+
+// Status colours
+const kWaiting    = Color(0xFFF59E0B);
+const kActive     = Color(0xFF3B82F6);
+const kDone       = Color(0xFF10B981);
+const kCancelled  = Color(0xFFEF4444);
+
+// ── Text styles ─────────────────────────────────────────────────────────────
+const kTitleStyle = TextStyle(
+  fontSize: 22, fontWeight: FontWeight.bold, color: kText,
+);
+const kSubtitleStyle = TextStyle(
+  fontSize: 13, color: kTextMuted,
+);
+const kLabelStyle = TextStyle(
+  fontSize: 12, fontWeight: FontWeight.w600, color: kTextMuted,
+  letterSpacing: 0.5,
+);
+
+// ── Decoration helpers ───────────────────────────────────────────────────────
+BoxDecoration kCardDecoration({double radius = 16, Color? color}) => BoxDecoration(
+  color: color ?? kCard,
+  borderRadius: BorderRadius.circular(radius),
+  boxShadow: const [
+    BoxShadow(color: Color(0x0D000000), blurRadius: 10, offset: Offset(0, 2)),
+  ],
+);
+
+InputDecoration kInputDecoration({
+  required String label,
+  required IconData icon,
+  Widget? suffix,
+}) =>
+    InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: kPrimary, size: 20),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: const Color(0xFFF9FAFB),
+      labelStyle: const TextStyle(color: kTextMuted),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: kPrimary, width: 1.8),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: kCancelled),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: kCancelled, width: 1.8),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+
+// ── Status helpers ───────────────────────────────────────────────────────────
+Color statusColor(String s) {
+  switch (s) {
+    case 'waiting':
+    case 'waiting_room':
+    case 'entered_opd':  return kWaiting;
+    case 'in_consultation': return kActive;
+    case 'completed':    return kDone;
+    case 'cancelled':
+    case 'absent':       return kCancelled;
+    default:             return kTextMuted;
+  }
 }
 
-ThemeData buildTheme() {
-  final base = ColorScheme.fromSeed(seedColor: C.brand, primary: C.brand);
-  OutlineInputBorder border(Color c) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: c, width: 1.2),
-      );
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: base,
-    scaffoldBackgroundColor: C.bg,
-    textTheme: ThemeData.light().textTheme.apply(bodyColor: C.ink, displayColor: C.ink),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      hintStyle: const TextStyle(color: C.muted),
-      enabledBorder: border(C.border),
-      focusedBorder: border(C.brand),
-      errorBorder: border(C.red),
-      focusedErrorBorder: border(C.red),
-      disabledBorder: border(C.border),
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
-      foregroundColor: C.ink,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-    ),
-  );
+String statusLabel(String s) =>
+    s.replaceAll('_', ' ').split(' ').map((w) =>
+        w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}').join(' ');
+
+IconData statusIcon(String s) {
+  switch (s) {
+    case 'entered_opd':     return Icons.login_rounded;
+    case 'waiting_room':    return Icons.hourglass_top_rounded;
+    case 'in_consultation': return Icons.medical_services_rounded;
+    case 'completed':       return Icons.check_circle_rounded;
+    case 'absent':          return Icons.person_off_rounded;
+    case 'cancelled':       return Icons.cancel_rounded;
+    default:                return Icons.circle_rounded;
+  }
 }
