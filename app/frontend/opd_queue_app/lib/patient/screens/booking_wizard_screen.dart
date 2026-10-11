@@ -3,6 +3,7 @@ import '../../models/user_model.dart';
 import '../models/appointment_model.dart';
 import '../services/appointment_service.dart';
 import 'booking_confirmation_screen.dart';
+import 'patient_dashboard.dart';
 
 class BookingWizardScreen extends StatefulWidget {
   final UserModel user;
@@ -603,7 +604,35 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
           _step == 0 ? 'Select Date & Time' : 'Review & Confirm',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        centerTitle: true,
+        centerTitle: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.calendar_month_rounded, size: 16),
+              label: const Text(
+                'My Appointments',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00796B),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: const BorderSide(color: Color(0xFF80CBC4), width: 1),
+                ),
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PatientDashboard(user: widget.user),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [

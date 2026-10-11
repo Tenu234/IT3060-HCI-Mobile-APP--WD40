@@ -70,6 +70,7 @@ class _OpdSearchScreenState extends State<OpdSearchScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          tooltip: 'My Appointments',
           onPressed: () => Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -81,10 +82,124 @@ class _OpdSearchScreenState extends State<OpdSearchScreen> {
           style: TextStyle(
               fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
         ),
-        centerTitle: true,
+        centerTitle: false,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.calendar_month_rounded, size: 16),
+              label: const Text(
+                'My Appointments',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00796B),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: const BorderSide(color: Color(0xFF80CBC4), width: 1),
+                ),
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PatientDashboard(user: widget.user),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
+          // Quick navigation banner to My Appointments
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE0F2FE), Color(0xFFE0F7FA)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFB2EBF2)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF006D77).withOpacity(0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF006D77).withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.event_note_rounded,
+                    color: Color(0xFF006D77),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Already Have an Appointment?',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Track live token numbers & wait times',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PatientDashboard(user: widget.user),
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1A5C6B),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 14),
+                  label: const Text(
+                    'My Appointments',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           // Step banner
           Container(
             width: double.infinity,
