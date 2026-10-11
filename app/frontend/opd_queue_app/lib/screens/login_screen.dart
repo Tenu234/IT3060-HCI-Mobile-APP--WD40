@@ -6,10 +6,8 @@ import 'dashboards/doctor_dashboard.dart';
 import 'dashboards/nurse_dashboard.dart';
 import 'dashboards/admin_dashboard.dart';
 import 'register_screen.dart';
-import 'staff_login_screen.dart';
-
-const _teal = Color(0xFF1A5C6B);
-const _bg = Color(0xFFF0F4F5);
+import '../patient/screens/opd_search_screen.dart';
+import '../features/staff/screens/staff_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,38 +16,39 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  // Mobile OTP
-  final _mobileController = TextEditingController();
-  bool _otpSent = false;
-  final _otpController = TextEditingController();
-
-  // Patient ID
-  final _patientIdController = TextEditingController();
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nicController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscure = true;
 
   bool _isLoading = false;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() => setState(() => _error = null));
-  }
+  bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    _tabController.dispose();
-    _mobileController.dispose();
-    _otpController.dispose();
-    _patientIdController.dispose();
+    _nicController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() { _isLoading = true; _errorMessage = null; });
+
+    try {
+      final user = await AuthService.login(
+        _nicController.text.trim(),
+        _passwordController.text,
+      );
+      if (mounted) _navigateToDashboard(user);
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'NIC/mobile number or password is incorrect. Try again.';
+      });
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _navigateToDashboard(UserModel user) {
@@ -61,11 +60,16 @@ class _LoginScreenState extends State<LoginScreen>
       case 'nurse':
         dashboard = NurseDashboard(user: user);
         break;
+      case 'staff':
+        dashboard = const StaffDashboardScreen();
+        break;
       case 'admin':
         dashboard = AdminDashboard(user: user);
         break;
+      case 'patient':
       default:
-        dashboard = PatientDashboard(user: user);
+        dashboard = OpdSearchScreen(user: user);
+        break;
     }
     Navigator.pushAndRemoveUntil(
       context,
@@ -74,350 +78,215 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Future<void> _handleLogin() async {
-    setState(() { _isLoading = true; _error = null; });
-    try {
-      final user = await AuthService.login(
-        _patientIdController.text.trim(),
-        _passwordController.text,
+  InputDecoration _inputDecoration(String hint) => InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
       );
-      if (mounted) _navigateToDashboard(user);
-    } catch (e) {
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: const Color(0xFFF0F4FF),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          children: [
+            // Top bar
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
                 children: [
-                  const Text('Log in to OPD portal',
-                      style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A2E))),
-                  const SizedBox(height: 6),
-                  const Text(
-                      'Book tokens, view prescriptions and lab reports.',
-                      style: TextStyle(
-                          fontSize: 14, color: Color(0xFF6B7280))),
-                  const SizedBox(height: 24),
-
-                  // Underline tab bar
-                  TabBar(
-                    controller: _tabController,
-                    labelColor: _teal,
-                    unselectedLabelColor: const Color(0xFF6B7280),
-                    labelStyle: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 14),
-                    unselectedLabelStyle: const TextStyle(fontSize: 14),
-                    indicatorColor: _teal,
-                    indicatorWeight: 2.5,
-                    dividerColor: const Color(0xFFDDE2E6),
-                    tabs: const [
-                      Tab(text: 'Mobile OTP'),
-                      Tab(text: 'Patient ID & password'),
+                  Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1565C0),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Government Hospital OPD',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text('Patient Services',
+                          style: TextStyle(color: Colors.grey, fontSize: 12)),
                     ],
                   ),
-                  const SizedBox(height: 24),
-
-                  // Tab content (fixed height to avoid nested scroll issues)
-                  [_buildOtpTab(), _buildPatientIdTab()]
-                      [_tabController.index],
-
-                  const SizedBox(height: 24),
-                  const Divider(color: Color(0xFFDDE2E6)),
-                  const SizedBox(height: 16),
-
-                  // Register link
-                  Center(
-                    child: GestureDetector(
-                      onTap: () => Navigator.push(context,
-                          MaterialPageRoute(
-                              builder: (_) => const RegisterScreen())),
-                      child: RichText(
-                        text: const TextSpan(
-                          text: 'First visit to this hospital? ',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280), fontSize: 14),
-                          children: [
-                            TextSpan(
-                              text: 'Register as a patient',
-                              style: TextStyle(
-                                  color: _teal,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Staff login link
-                  Center(
-                    child: GestureDetector(
-                      onTap: () => Navigator.push(context,
-                          MaterialPageRoute(
-                              builder: (_) => const StaffLoginScreen())),
-                      child: RichText(
-                        text: const TextSpan(
-                          text: 'Hospital staff? ',
-                          style: TextStyle(
-                              color: Color(0xFF6B7280), fontSize: 14),
-                          children: [
-                            TextSpan(
-                              text: 'Log in here →',
-                              style: TextStyle(
-                                  color: _teal,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                  const Spacer(),
+                  const Icon(Icons.help_outline, color: Colors.grey),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildOtpTab() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Mobile number',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-        const SizedBox(height: 8),
-        _PhoneField(controller: _mobileController),
-        const SizedBox(height: 6),
-        const Text('Use the number you registered with.',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-        if (_otpSent) ...[
-          const SizedBox(height: 16),
-          const Text('Enter OTP',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-          const SizedBox(height: 8),
-          _InputBox(
-              controller: _otpController,
-              hint: '6-digit OTP',
-              keyboardType: TextInputType.number),
-        ],
-        const SizedBox(height: 20),
-        _PrimaryButton(
-          label: _otpSent ? 'Verify OTP' : 'Send OTP',
-          isLoading: _isLoading,
-          onPressed: () {
-            if (!_otpSent) {
-              setState(() {
-                _otpSent = true;
-                _otpController.text = '123456'; // mock OTP for testing
-              });
-            }
-          },
-        ),
-        if (_otpSent) ...[
-          const SizedBox(height: 8),
-          const Text('Demo: OTP auto-filled as 123456',
-              style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
-        ],
-      ],
-    );
-  }
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text('Welcome back',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text('Log in to continue to OPD Search.',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                    const SizedBox(height: 24),
 
-  Widget _buildPatientIdTab() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Patient ID or ABHA number',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-        const SizedBox(height: 8),
-        _InputBox(controller: _patientIdController, hint: 'OPD-2026-48213'),
-        const SizedBox(height: 16),
-        const Text('Password',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-        const SizedBox(height: 8),
-        _InputBox(
-          controller: _passwordController,
-          hint: '',
-          obscure: _obscure,
-          suffix: IconButton(
-            icon: Icon(_obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                color: Colors.grey, size: 20),
-            onPressed: () => setState(() => _obscure = !_obscure),
-          ),
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () {},
-          child: const Text('Forgot password?',
-              style: TextStyle(
-                  color: _teal, fontWeight: FontWeight.w500, fontSize: 13)),
-        ),
-        if (_error != null) ...[
-          const SizedBox(height: 12),
-          _ErrorBox(message: _error!),
-        ],
-        const SizedBox(height: 20),
-        _PrimaryButton(
-            label: 'Log in', isLoading: _isLoading, onPressed: _handleLogin),
-      ],
-    );
-  }
-}
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10, offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('NIC, email or mobile number',
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _nicController,
+                              decoration: _inputDecoration('Enter NIC, email or +94 mobile'),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'This field is required' : null,
+                            ),
+                            const SizedBox(height: 16),
 
-// ── Shared widgets ───────────────────────────────────────────────
+                            const Text('Password',
+                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              decoration: _inputDecoration('Enter password').copyWith(
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () => setState(
+                                      () => _obscurePassword = !_obscurePassword),
+                                ),
+                              ),
+                              validator: (v) => (v == null || v.isEmpty)
+                                  ? 'Password is required' : null,
+                            ),
 
-class _InputBox extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final bool obscure;
-  final TextInputType keyboardType;
-  final Widget? suffix;
+                            if (_errorMessage != null) ...[
+                              const SizedBox(height: 12),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.red.shade200),
+                                ),
+                                child: Row(children: [
+                                  Icon(Icons.warning_amber_rounded,
+                                      color: Colors.red.shade600, size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(_errorMessage!,
+                                        style: TextStyle(
+                                            color: Colors.red.shade700, fontSize: 13)),
+                                  ),
+                                ]),
+                              ),
+                            ],
 
-  const _InputBox({
-    required this.controller,
-    required this.hint,
-    this.obscure = false,
-    this.keyboardType = TextInputType.text,
-    this.suffix,
-  });
+                            const SizedBox(height: 20),
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFDDE2E6)),
-      ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscure,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFFB0B8BF)),
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          suffixIcon: suffix,
-        ),
-      ),
-    );
-  }
-}
+                            SizedBox(
+                              width: double.infinity, height: 50,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _handleLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1565C0),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 22, height: 22,
+                                        child: CircularProgressIndicator(
+                                            color: Colors.white, strokeWidth: 2.5))
+                                    : const Text('Log In',
+                                        style: TextStyle(
+                                            fontSize: 16, fontWeight: FontWeight.w600)),
+                              ),
+                            ),
 
-class _PhoneField extends StatelessWidget {
-  final TextEditingController controller;
-  const _PhoneField({required this.controller});
+                            const SizedBox(height: 12),
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFDDE2E6)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: const BoxDecoration(
-              border: Border(right: BorderSide(color: Color(0xFFDDE2E6))),
-            ),
-            child: const Text('+94',
-                style:
-                    TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-          ),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText: '77 123 4567',
-                hintStyle: TextStyle(color: Color(0xFFB0B8BF)),
-                border: InputBorder.none,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                            SizedBox(
+                              width: double.infinity, height: 50,
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const RegisterScreen()),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF1565C0),
+                                  side: const BorderSide(color: Color(0xFF1565C0)),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
+                                ),
+                                child: const Text('Create Account',
+                                    style: TextStyle(
+                                        fontSize: 16, fontWeight: FontWeight.w600)),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+                            const Center(
+                              child: Text('Successful login opens OPD Search.',
+                                  style: TextStyle(color: Colors.grey, fontSize: 12)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PrimaryButton extends StatelessWidget {
-  final String label;
-  final bool isLoading;
-  final VoidCallback onPressed;
-  const _PrimaryButton(
-      {required this.label,
-      required this.isLoading,
-      required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _teal,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10)),
-          elevation: 0,
+          ],
         ),
-        child: isLoading
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2.5))
-            : Text(label,
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w600)),
       ),
-    );
-  }
-}
-
-class _ErrorBox extends StatelessWidget {
-  final String message;
-  const _ErrorBox({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.shade200),
-      ),
-      child: Text(message,
-          style: TextStyle(color: Colors.red.shade700, fontSize: 13)),
     );
   }
 }

@@ -10,17 +10,18 @@ const generateToken = (user) =>
   );
 
 // POST /api/auth/register
-// Public route — role is ALWAYS hardcoded to 'patient'
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, nic } = req.body;
+    const { name, email, password, phone, nic, role } = req.body;
 
-    // Validate required fields
     if (!name || !email || !password || !phone || !nic) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
-    // Check for existing account
+    // Only allow valid roles
+    const allowedRoles = ['patient', 'doctor', 'nurse', 'admin'];
+    const assignedRole = allowedRoles.includes(role) ? role : 'patient';
+
     const existingUser = await User.findOne({ $or: [{ email }, { nic }] });
     if (existingUser) {
       const field = existingUser.email === email ? 'Email' : 'NIC';
@@ -37,7 +38,7 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       phone,
       nic,
-      role: 'patient',
+      role: assignedRole,
     });
 
     const token = generateToken(user);
@@ -61,10 +62,14 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required.' });
+      return res.status(400).json({ message: 'Email/NIC and password are required.' });
     }
 
-    const user = await User.findOne({ email });
+    // Allow login by email, NIC, or phone
+    const user = await User.findOne({
+      $or: [{ email }, { nic: email }, { phone: email }],
+    });
+
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
@@ -75,6 +80,8 @@ exports.login = async (req, res) => {
     }
 
     const token = generateToken(user);
+
+    console.log('Login response role:', user.role); // debug
 
     return res.status(200).json({
       token,

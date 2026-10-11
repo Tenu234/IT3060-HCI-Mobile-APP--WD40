@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
 import '../patient/services/appointment_service.dart';
+import '../patient/services/lab_report_service.dart';
 
 class AuthService {
   // Toggle this to false when your backend is ready, then set _baseUrl
@@ -16,10 +17,11 @@ class AuthService {
 
   // ─── Mock users for testing all 4 roles ───────────────────────────────────
   static final List<Map<String, String>> _mockUsers = [
-    {'email': 'patient@test.com',  'password': '123456', 'role': 'patient', 'name': 'Sam Patient',  'id': '1'},
+    {'email': 'prabodaweerasooriya62@gmail.com', 'password': '123456', 'role': 'patient', 'name': 'Praboda Weerasooriya', 'id': '1'},
     {'email': 'doctor@test.com',   'password': '123456', 'role': 'doctor',  'name': 'Dr. Smith',    'id': '2'},
     {'email': 'nurse@test.com',    'password': '123456', 'role': 'nurse',   'name': 'Nurse Anna',   'id': '3'},
     {'email': 'admin@test.com',    'password': '123456', 'role': 'admin',   'name': 'Admin Root',   'id': '4'},
+    {'email': 'staff@test.com',    'password': '123456', 'role': 'staff',   'name': 'Staff User',   'id': '5'},
   ];
 
   static Future<UserModel> login(String email, String password) async {
@@ -44,7 +46,8 @@ class AuthService {
     final data = jsonDecode(response.body);
     if (response.statusCode == 200) {
       final user = UserModel.fromJson(data);
-      AppointmentService.setToken(user.token); // store token for API calls
+      AppointmentService.setToken(user.token);
+      LabReportService.setToken(user.token);
       return user;
     }
     throw Exception(data['message'] ?? 'Login failed.');
