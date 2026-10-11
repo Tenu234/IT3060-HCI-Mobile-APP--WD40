@@ -11,6 +11,7 @@ class BookingConfirmationScreen extends StatelessWidget {
   final String timeSlot;
   final String appointmentId;
   final int queueNumber;
+  final String tokenNumber;
 
   const BookingConfirmationScreen({
     super.key,
@@ -21,7 +22,8 @@ class BookingConfirmationScreen extends StatelessWidget {
     required this.date,
     required this.timeSlot,
     required this.appointmentId,
-    required this.queueNumber,
+    this.queueNumber = 1,
+    this.tokenNumber = '',
   });
 
   int get _estimatedWaitMins => queueNumber * 10;
@@ -117,11 +119,13 @@ class BookingConfirmationScreen extends StatelessWidget {
                           ),
                           child: Column(
                             children: [
-                              Text('Queue No: $queueNumber',
-                                  style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1565C0))),
+                              Text(
+                                tokenNumber.isNotEmpty ? 'Token No: $tokenNumber' : 'Queue No: $queueNumber',
+                                style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1565C0)),
+                              ),
                               const SizedBox(height: 4),
                               Text('Est. Waiting Time: ~$_estimatedWaitMins mins',
                                   style: const TextStyle(

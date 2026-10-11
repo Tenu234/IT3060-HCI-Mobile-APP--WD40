@@ -99,7 +99,11 @@ class _LiveQueueScreenState extends State<LiveQueueScreen>
   }
 
   List<WalkInBooking> get _waiting => _queue
-      .where((b) => b.status == 'entered_opd' || b.status == 'waiting_room')
+      .where((b) =>
+          b.status == 'entered_opd' ||
+          b.status == 'waiting_room' ||
+          b.status == 'waiting' ||
+          b.status == 'upcoming')
       .toList();
   List<WalkInBooking> get _inRoom =>
       _queue.where((b) => b.status == 'in_consultation').toList();
@@ -107,6 +111,7 @@ class _LiveQueueScreenState extends State<LiveQueueScreen>
       .where((b) =>
           b.status == 'completed' ||
           b.status == 'absent' ||
+          b.status == 'skipped' ||
           b.status == 'cancelled')
       .toList();
 
@@ -120,6 +125,7 @@ class _LiveQueueScreenState extends State<LiveQueueScreen>
   }
 
   String _tokenFor(WalkInBooking b) {
+    if (b.tokenNumber.isNotEmpty) return b.tokenNumber;
     final raw = b.id ?? DateTime.now().millisecondsSinceEpoch.toString();
     return 'Q-${raw.substring(raw.length > 4 ? raw.length - 4 : 0).toUpperCase()}';
   }

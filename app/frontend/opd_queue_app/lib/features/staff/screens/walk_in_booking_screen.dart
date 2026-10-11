@@ -58,9 +58,9 @@ class _WalkInBookingScreenState extends State<WalkInBookingScreen> {
   }
 
   Future<void> _showTokenDialog(WalkInBooking booking) async {
-    // Generate token from ID tail or fallback to timestamp
-    final raw  = booking.id ?? DateTime.now().millisecondsSinceEpoch.toString();
-    final token = 'Q-${raw.substring(raw.length > 4 ? raw.length - 4 : 0).toUpperCase()}';
+    final token = booking.tokenNumber.isNotEmpty
+        ? booking.tokenNumber
+        : 'Q-${(booking.id ?? DateTime.now().millisecondsSinceEpoch.toString()).substring(booking.id != null && booking.id!.length > 4 ? booking.id!.length - 4 : 0).toUpperCase()}';
 
     await showDialog(
       context: context,

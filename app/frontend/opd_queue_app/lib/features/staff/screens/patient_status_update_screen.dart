@@ -41,9 +41,13 @@ class _PatientStatusUpdateScreenState
     });
   }
 
-  int _idx(String s) => _kFlow.indexWhere((f) => f['value'] == s);
+  int _idx(String s) {
+    if (s == 'waiting' || s == 'upcoming') return 1; // maps to waiting_room
+    return _kFlow.indexWhere((f) => f['value'] == s);
+  }
 
   String _tokenFor(WalkInBooking b) {
+    if (b.tokenNumber.isNotEmpty) return b.tokenNumber;
     final raw = b.id ?? DateTime.now().millisecondsSinceEpoch.toString();
     return 'Q-${raw.substring(raw.length > 4 ? raw.length - 4 : 0).toUpperCase()}';
   }

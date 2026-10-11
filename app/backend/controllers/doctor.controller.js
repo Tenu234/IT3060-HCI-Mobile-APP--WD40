@@ -10,7 +10,11 @@ exports.getDailyQueue = async (req, res) => {
     const query = {};
 
     if (status && status !== 'all') {
-      query.status = status;
+      if (status === 'waiting') {
+        query.status = { $in: ['waiting', 'upcoming', 'entered_opd', 'waiting_room'] };
+      } else {
+        query.status = status;
+      }
     } else {
       // By default exclude cancelled
       query.status = { $ne: 'cancelled' };
@@ -55,7 +59,7 @@ exports.updatePatientStatus = async (req, res) => {
     const { id } = req.params;
     const { status, roomNumber } = req.body;
 
-    const allowed = ['waiting', 'in_consultation', 'completed', 'skipped'];
+    const allowed = ['waiting', 'entered_opd', 'waiting_room', 'in_consultation', 'completed', 'skipped', 'absent'];
     if (!allowed.includes(status)) {
       return res.status(400).json({ message: 'Invalid status value.' });
     }
@@ -182,10 +186,10 @@ exports.getDoctorSummary = async (req, res) => {
       .populate('patientId', 'name phone nic')
       .sort({ updatedAt: -1 });
 
-    const waiting = all.filter((a) => a.status === 'waiting' || a.status === 'upcoming');
+    const waiting = all.filter((a) => a.status === 'waiting' || a.status === 'upcoming' || a.status === 'entered_opd' || a.status === 'waiting_room');
     const inConsultation = all.filter((a) => a.status === 'in_consultation');
     const completed = all.filter((a) => a.status === 'completed');
-    const skipped = all.filter((a) => a.status === 'skipped');
+    const skipped = all.filter((a) => a.status === 'skipped' || a.status === 'absent');
 
     res.json({
       totalPatients: all.length,

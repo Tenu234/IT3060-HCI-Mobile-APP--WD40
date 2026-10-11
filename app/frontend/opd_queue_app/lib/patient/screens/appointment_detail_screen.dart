@@ -257,7 +257,12 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isUpcoming = _apt.status == 'upcoming' && !_cancelled;
+    final isUpcoming = (_apt.status == 'upcoming' ||
+            _apt.status == 'waiting' ||
+            _apt.status == 'entered_opd' ||
+            _apt.status == 'waiting_room' ||
+            _apt.status == 'in_consultation') &&
+        !_cancelled;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4FF),
@@ -300,12 +305,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          isUpcoming
-                              ? 'Status: Confirmed & Active'
-                              : 'Status: ${_apt.status.toUpperCase()}',
+                          'Status: ${_apt.status.replaceAll('_', ' ').toUpperCase()}',
                           style: TextStyle(
-                            color:
-                                isUpcoming ? Colors.green : Colors.grey,
+                            color: isUpcoming ? const Color(0xFF006D77) : Colors.grey,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -357,11 +359,14 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                                   crossAxisAlignment:
                                       CrossAxisAlignment.start,
                                   children: [
-                                    const Text('Queue No.',
+                                    const Text('Queue / Token No.',
                                         style: TextStyle(
                                             color: Colors.grey,
                                             fontSize: 12)),
-                                    Text('$_queueNo',
+                                    Text(
+                                        _apt.tokenNumber.isNotEmpty
+                                            ? _apt.tokenNumber
+                                            : '$_queueNo',
                                         style: const TextStyle(
                                             fontSize: 28,
                                             fontWeight: FontWeight.bold,

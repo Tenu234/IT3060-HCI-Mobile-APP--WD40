@@ -114,7 +114,11 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
 
   // Quick Action: Call Next Patient in queue
   void _callNextWaitingPatient() {
-    final nextWaiting = _queue.where((p) => p.status == 'waiting' || p.status == 'upcoming').firstOrNull;
+    final nextWaiting = _queue.where((p) =>
+        p.status == 'waiting' ||
+        p.status == 'upcoming' ||
+        p.status == 'entered_opd' ||
+        p.status == 'waiting_room').firstOrNull;
     if (nextWaiting != null) {
       _callPatient(nextWaiting);
     } else {
@@ -254,7 +258,11 @@ class _DoctorQueueScreenState extends State<DoctorQueueScreen> {
     final waitingList = _queue.where((p) => p.status != 'in_consultation').toList();
 
     final totalCount = _queue.length;
-    final waitingCount = _queue.where((p) => p.status == 'waiting' || p.status == 'upcoming').length;
+    final waitingCount = _queue.where((p) =>
+        p.status == 'waiting' ||
+        p.status == 'upcoming' ||
+        p.status == 'entered_opd' ||
+        p.status == 'waiting_room').length;
     final inConsultCount = activePatient != null ? 1 : 0;
     final completedCount = _queue.where((p) => p.status == 'completed').length;
 

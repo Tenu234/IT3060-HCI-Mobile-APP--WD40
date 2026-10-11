@@ -99,11 +99,19 @@ class _PatientDashboardState extends State<PatientDashboard>
 
           final all = snapshot.data ?? [];
           final upcoming = all
-              .where((a) => a.status == 'upcoming')
+              .where((a) =>
+                  a.status == 'upcoming' ||
+                  a.status == 'waiting' ||
+                  a.status == 'entered_opd' ||
+                  a.status == 'waiting_room' ||
+                  a.status == 'in_consultation')
               .toList();
           final past = all
               .where((a) =>
-                  a.status == 'completed' || a.status == 'cancelled')
+                  a.status == 'completed' ||
+                  a.status == 'cancelled' ||
+                  a.status == 'absent' ||
+                  a.status == 'skipped')
               .toList();
 
           return Column(
@@ -313,7 +321,7 @@ class _PatientDashboardState extends State<PatientDashboard>
                               size: 15, color: Color(0xFFFF8F00)),
                           const SizedBox(width: 6),
                           Text(
-                            'Queue No: $queueNo  •  ${apt.timeSlot}',
+                            'Token: ${apt.tokenNumber.isNotEmpty ? apt.tokenNumber : apt.id}  •  ${apt.timeSlot}',
                             style: const TextStyle(
                               color: Color(0xFFE65100),
                               fontWeight: FontWeight.w600,
@@ -387,17 +395,42 @@ class _PatientDashboardState extends State<PatientDashboard>
     Color color;
     String label;
     switch (status) {
-      case 'upcoming':
-        color = Colors.green;
-        label = 'CONFIRMED';
+      case 'entered_opd':
+        color = const Color(0xFF00897B);
+        label = 'ENTERED OPD';
+        break;
+      case 'waiting_room':
+        color = const Color(0xFFF59E0B);
+        label = 'WAITING ROOM';
+        break;
+      case 'waiting':
+        color = const Color(0xFFF59E0B);
+        label = 'WAITING';
+        break;
+      case 'in_consultation':
+        color = const Color(0xFF6366F1);
+        label = 'IN CONSULTATION';
+        break;
+      case 'completed':
+        color = const Color(0xFF10B981);
+        label = 'COMPLETED';
+        break;
+      case 'skipped':
+        color = const Color(0xFFF97316);
+        label = 'SKIPPED';
+        break;
+      case 'absent':
+        color = Colors.red;
+        label = 'ABSENT';
         break;
       case 'cancelled':
         color = Colors.red;
         label = 'CANCELLED';
         break;
+      case 'upcoming':
       default:
-        color = Colors.grey;
-        label = 'COMPLETED';
+        color = const Color(0xFF10B981);
+        label = 'CONFIRMED';
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

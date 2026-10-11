@@ -63,6 +63,7 @@ class _DailyRegisterScreenState extends State<DailyRegisterScreen> {
   }
 
   String _tokenFor(WalkInBooking b) {
+    if (b.tokenNumber.isNotEmpty) return b.tokenNumber;
     final raw = b.id ?? DateTime.now().millisecondsSinceEpoch.toString();
     return 'Q-${raw.substring(raw.length > 4 ? raw.length - 4 : 0).toUpperCase()}';
   }

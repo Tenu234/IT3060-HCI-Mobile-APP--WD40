@@ -15,11 +15,15 @@ const bookingSchema = new mongoose.Schema({
   },
   roomNumber: {
     type: String,
-    required: true,
+    default: 'Consultation Room 2',
+  },
+  tokenNumber: {
+    type: String,
+    default: '',
   },
   status: {
     type: String,
-    enum: ['entered_opd', 'waiting_room', 'in_consultation', 'completed', 'absent', 'cancelled'],
+    enum: ['upcoming', 'entered_opd', 'waiting_room', 'waiting', 'in_consultation', 'completed', 'skipped', 'absent', 'cancelled'],
     default: 'entered_opd',
   },
   createdAt: {

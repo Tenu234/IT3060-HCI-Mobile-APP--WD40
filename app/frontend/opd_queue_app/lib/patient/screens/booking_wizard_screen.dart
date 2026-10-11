@@ -58,36 +58,50 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
 
   Future<void> _confirm() async {
     setState(() => _isLoading = true);
-    final appointmentId = 'A-${DateTime.now().millisecondsSinceEpoch % 10000}';
-    final queueNumber = 10 + (DateTime.now().millisecondsSinceEpoch % 40).toInt();
-
-    await AppointmentService.bookAppointment(
-      AppointmentModel(
-        id: appointmentId,
-        hospitalName: widget.hospitalName,
-        opdName: widget.opdName,
-        doctorName: _selectedDoctor!,
-        date: _selectedDate == null ? '' :
-            '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2,'0')}-${_selectedDate!.day.toString().padLeft(2,'0')}',
-        timeSlot: _selectedSlot!,
-        status: 'upcoming',
-      ),
-    );
-    setState(() => _isLoading = false);
-
-    if (mounted) {
-      Navigator.pushReplacement(context, MaterialPageRoute(
-        builder: (_) => BookingConfirmationScreen(
-          user: widget.user,
+    try {
+      final booked = await AppointmentService.bookAppointment(
+        AppointmentModel(
+          id: '',
           hospitalName: widget.hospitalName,
           opdName: widget.opdName,
           doctorName: _selectedDoctor!,
-          date: _formattedDate,
+          date: _selectedDate == null
+              ? ''
+              : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
           timeSlot: _selectedSlot!,
-          appointmentId: appointmentId,
-          queueNumber: queueNumber,
+          status: 'waiting',
         ),
-      ));
+      );
+      setState(() => _isLoading = false);
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => BookingConfirmationScreen(
+              user: widget.user,
+              hospitalName: booked.hospitalName.isNotEmpty ? booked.hospitalName : widget.hospitalName,
+              opdName: booked.opdName.isNotEmpty ? booked.opdName : widget.opdName,
+              doctorName: booked.doctorName.isNotEmpty ? booked.doctorName : _selectedDoctor!,
+              date: _formattedDate,
+              timeSlot: booked.timeSlot.isNotEmpty ? booked.timeSlot : _selectedSlot!,
+              appointmentId: booked.id,
+              tokenNumber: booked.tokenNumber.isNotEmpty ? booked.tokenNumber : 'A-101',
+              queueNumber: 1,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to book appointment: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

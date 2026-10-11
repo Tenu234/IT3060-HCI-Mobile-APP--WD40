@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/appointment_model.dart';
 
 class AppointmentService {
-  static const bool _useMock = true; // set false when backend is running
+  static const bool _useMock = false; // Connect to live backend
   static const String _baseUrl = 'http://localhost:5000/api/appointments';
   static String? _token;
 
@@ -11,13 +11,14 @@ class AppointmentService {
 
   static Map<String, String> get _headers => {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $_token',
+        if (_token != null && _token!.isNotEmpty) 'Authorization': 'Bearer $_token',
       };
 
-  // Mock data for testing without backend
+  // Mock fallback data for testing if backend unreachable
   static final List<AppointmentModel> _mockAppointments = [
     AppointmentModel(
       id: 'A001',
+      tokenNumber: 'A-101',
       hospitalName: 'City General Hospital',
       opdName: 'Cardiology OPD',
       doctorName: 'Dr. Perera',
@@ -27,6 +28,7 @@ class AppointmentService {
     ),
     AppointmentModel(
       id: 'A002',
+      tokenNumber: 'A-102',
       hospitalName: 'National Hospital',
       opdName: 'Neurology OPD',
       doctorName: 'Dr. Silva',
@@ -41,19 +43,24 @@ class AppointmentService {
       await Future.delayed(const Duration(milliseconds: 300));
       return List.from(_mockAppointments);
     }
-    final response = await http.get(Uri.parse(_baseUrl), headers: _headers);
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map((e) => AppointmentModel.fromJson(e)).toList();
+    try {
+      final response = await http.get(Uri.parse(_baseUrl), headers: _headers);
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+        return data.map((e) => AppointmentModel.fromJson(e)).toList();
+      }
+    } catch (e) {
+      print('getMyAppointments error, using fallback: $e');
+      return List.from(_mockAppointments);
     }
     throw Exception('Failed to load appointments.');
   }
 
-  static Future<void> bookAppointment(AppointmentModel appointment) async {
+  static Future<AppointmentModel> bookAppointment(AppointmentModel appointment) async {
     if (_useMock) {
       await Future.delayed(const Duration(milliseconds: 300));
       _mockAppointments.add(appointment);
-      return;
+      return appointment;
     }
     final response = await http.post(
       Uri.parse(_baseUrl),
@@ -66,9 +73,10 @@ class AppointmentService {
         'timeSlot': appointment.timeSlot,
       }),
     );
-    if (response.statusCode != 201) {
-      throw Exception('Failed to book appointment.');
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return AppointmentModel.fromJson(jsonDecode(response.body));
     }
+    throw Exception('Failed to book appointment: ${response.body}');
   }
 
   static Future<void> cancelAppointment(String id) async {
