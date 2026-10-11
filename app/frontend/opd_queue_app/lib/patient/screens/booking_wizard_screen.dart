@@ -21,13 +21,11 @@ class BookingWizardScreen extends StatefulWidget {
 }
 
 class _BookingWizardScreenState extends State<BookingWizardScreen> {
-  int _step = 0; // 0: Select Doctor, 1: Date & Slot, 2: Review
+  int _step = 0; // 0: Doctor + Date + Slot, 1: Review
   bool _isLoading = false;
 
-  // Step 1
+  // Selections
   String? _selectedDoctor;
-
-  // Step 2
   DateTime _focusedMonth = DateTime.now();
   DateTime? _selectedDate;
   String? _selectedSlot;
@@ -45,11 +43,10 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
   // Simulate full slots
   final List<String> _fullSlots = ['11:30 AM'];
 
-  final List<String> _steps = ['Select Doctor', 'Select Date & Slot', 'Review & Confirm'];
+  final List<String> _steps = ['Select Date & Time', 'Review & Confirm'];
 
   bool get _canProceed {
-    if (_step == 0) return _selectedDoctor != null;
-    if (_step == 1) return _selectedDate != null && _selectedSlot != null;
+    if (_step == 0) return _selectedDoctor != null && _selectedDate != null && _selectedSlot != null;
     return true;
   }
 
@@ -96,12 +93,15 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
 
   // ─── Step indicator ────────────────────────────────────────────────────────
   Widget _stepIndicator() {
+    // Always show 3 visual steps: Doctor(done when step>0), Date(done when step>0), Review(active when step==1)
+    final visualSteps = ['Select Doctor', 'Select Date & Slot', 'Review & Confirm'];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
-        children: List.generate(_steps.length, (i) {
-          final active = i == _step;
-          final done = i < _step;
+        children: List.generate(visualSteps.length, (i) {
+          final done = (_step == 0 && i == 0) ? false : i < (_step == 0 ? 0 : 2);
+          final active = (_step == 0 && i < 2) || (_step == 1 && i == 2);
+          final isDone = _step == 1 && i < 2;
           return Expanded(
             child: Row(
               children: [
@@ -110,34 +110,38 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
                     children: [
                       CircleAvatar(
                         radius: 16,
-                        backgroundColor: done || active
+                        backgroundColor: isDone || (_step == 0 && i == 0)
                             ? const Color(0xFF00897B)
-                            : Colors.grey.shade300,
-                        child: done
+                            : active
+                                ? const Color(0xFF00897B)
+                                : Colors.grey.shade300,
+                        child: isDone
                             ? const Icon(Icons.check, color: Colors.white, size: 16)
                             : Text('${i + 1}',
                                 style: TextStyle(
-                                    color: active ? Colors.white : Colors.grey,
+                                    color: active || (_step == 0 && i == 0)
+                                        ? Colors.white
+                                        : Colors.grey,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13)),
                       ),
                       const SizedBox(height: 4),
-                      Text(_steps[i],
+                      Text(visualSteps[i],
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontSize: 11,
-                              color: active
+                              color: active || isDone || (_step == 0 && i == 0)
                                   ? const Color(0xFF00897B)
                                   : Colors.grey)),
                     ],
                   ),
                 ),
-                if (i < _steps.length - 1)
+                if (i < visualSteps.length - 1)
                   Expanded(
                     child: Container(
                       height: 2,
                       margin: const EdgeInsets.only(bottom: 20),
-                      color: i < _step
+                      color: isDone
                           ? const Color(0xFF00897B)
                           : Colors.grey.shade300,
                     ),
@@ -150,13 +154,14 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
     );
   }
 
-  // ─── Step 1: Select Doctor ─────────────────────────────────────────────────
+  // ─── Step 1: Doctor + Date + Slot (combined) ──────────────────────────────
   Widget _buildStep1() {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Doctor dropdown
           RichText(
             text: const TextSpan(
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87),
@@ -180,23 +185,16 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
             )).toList(),
             onChanged: (v) => setState(() => _selectedDoctor = v),
           ),
-        ],
-      ),
-    );
-  }
+          const SizedBox(height: 24),
 
-  // ─── Step 2: Calendar + Slots ──────────────────────────────────────────────
-  Widget _buildStep2() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+          // Calendar
           const Text('Select Date',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
           const SizedBox(height: 12),
           _buildCalendar(),
           const SizedBox(height: 20),
+
+          // Slots
           if (_selectedDate != null) ...[
             Text('Available Slots ($_formattedDate)',
                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
@@ -424,7 +422,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
         backgroundColor: const Color(0xFF00897B),
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(_step == 1 ? 'Select Date & Time' : 'Book Appointment'),
+        title: Text(_step == 0 ? 'Select Date & Time' : 'Book Appointment'),
         centerTitle: true,
       ),
       body: Column(
@@ -434,9 +432,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
           Expanded(
             child: _step == 0
                 ? _buildStep1()
-                : _step == 1
-                    ? _buildStep2()
-                    : _buildStep3(),
+                : _buildStep3(),
           ),
 
           // Bottom buttons
@@ -461,7 +457,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
                   child: ElevatedButton(
                     onPressed: _canProceed
                         ? () {
-                            if (_step < 2) {
+                            if (_step < 1) {
                               setState(() => _step++);
                             } else {
                               _confirm();
@@ -486,10 +482,8 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
                             children: [
                               Text(
                                 _step == 0
-                                    ? 'Continue to Date & Slot'
-                                    : _step == 1
-                                        ? 'Review Appointment'
-                                        : 'Confirm & Book Appointment',
+                                    ? 'Review Appointment'
+                                    : 'Confirm & Book Appointment',
                                 style: const TextStyle(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(width: 6),
