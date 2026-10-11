@@ -33,6 +33,9 @@ package-lock.json
 .env
 .env.local
 .env.*
+!.env.example
+*.db
+*.db-*
 
 # ── OS / Editor ───────────────────────────────────────────────────
 .DS_Store

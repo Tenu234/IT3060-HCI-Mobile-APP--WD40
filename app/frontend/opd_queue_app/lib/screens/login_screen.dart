@@ -1,289 +1,88 @@
 import 'package:flutter/material.dart';
-import '../models/user_model.dart';
-import '../services/auth_service.dart';
-import 'dashboards/patient_dashboard.dart';
-import 'dashboards/doctor_dashboard.dart';
-import 'dashboards/nurse_dashboard.dart';
-import 'dashboards/admin_dashboard.dart';
-import 'register_screen.dart';
-import '../patient/screens/opd_search_screen.dart';
-import '../features/staff/screens/staff_dashboard_screen.dart';
+import '../router.dart';
+import '../services/api.dart';
+import '../services/auth.dart';
+import '../theme.dart';
+import '../widgets/common.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nicController = TextEditingController();
-  final _passwordController = TextEditingController();
-
-  bool _isLoading = false;
-  bool _obscurePassword = true;
-  String? _errorMessage;
+  final _id = TextEditingController();
+  final _pw = TextEditingController();
+  String? _error;
+  bool _loading = false;
 
   @override
   void dispose() {
-    _nicController.dispose();
-    _passwordController.dispose();
+    _id.dispose();
+    _pw.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() { _isLoading = true; _errorMessage = null; });
-
+  Future<void> _login() async {
+    if (_id.text.trim().isEmpty || _pw.text.isEmpty) {
+      setState(() => _error = 'Enter your NIC or mobile number and password.');
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
-      final user = await AuthService.login(
-        _nicController.text.trim(),
-        _passwordController.text,
-      );
-      if (mounted) _navigateToDashboard(user);
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'NIC/mobile number or password is incorrect. Try again.';
-      });
+      await Auth.i.login(_id.text.trim(), _pw.text);
+      if (Auth.i.role != 'admin') {
+        await Auth.i.logout();
+        if (mounted) setState(() => _error = 'This app is for OPD administrators only.');
+        return;
+      }
+      if (!mounted) return;
+      goHome(context);
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
-
-  void _navigateToDashboard(UserModel user) {
-    Widget dashboard;
-    switch (user.role.toLowerCase()) {
-      case 'doctor':
-        dashboard = DoctorDashboard(user: user);
-        break;
-      case 'nurse':
-        dashboard = NurseDashboard(user: user);
-        break;
-      case 'staff':
-        dashboard = const StaffDashboardScreen();
-        break;
-      case 'admin':
-        dashboard = AdminDashboard(user: user);
-        break;
-      case 'patient':
-      default:
-        dashboard = OpdSearchScreen(user: user);
-        break;
-    }
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => dashboard),
-    );
-  }
-
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF1565C0), width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.red),
-        ),
-      );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4FF),
+      appBar: const OpdAppBar(subtitle: 'OPD Admin', showBack: false),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Top bar
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36, height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1565C0),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.add, color: Colors.white, size: 20),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: ListView(padding: const EdgeInsets.all(20), shrinkWrap: true, children: [
+              const Heading('Admin sign in', subtitle: 'Log in to manage OPD bookings, clinics and doctors.'),
+              const SizedBox(height: 20),
+              Panel(
+                padding: const EdgeInsets.all(18),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  LabeledField(
+                    label: 'NIC or mobile number',
+                    controller: _id,
+                    hint: 'Enter NIC or +94 mobile',
+                    keyboard: TextInputType.emailAddress,
                   ),
-                  const SizedBox(width: 12),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Government Hospital OPD',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text('Patient Services',
-                          style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    ],
+                  const SizedBox(height: 16),
+                  LabeledField(label: 'Password', controller: _pw, hint: 'Enter password', password: true),
+                  if (_error != null) ...[const SizedBox(height: 16), ErrorBanner(_error!)],
+                  const SizedBox(height: 18),
+                  PrimaryButton('Log In', onPressed: _login, loading: _loading),
+                  const SizedBox(height: 14),
+                  const Center(
+                    child: Text('Demo admin: 198011111111 / Admin@123',
+                        style: TextStyle(color: C.muted, fontSize: 12.5)),
                   ),
-                  const Spacer(),
-                  const Icon(Icons.help_outline, color: Colors.grey),
-                ],
+                ]),
               ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    const Text('Welcome back',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text('Log in to continue to OPD Search.',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                    const SizedBox(height: 24),
-
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10, offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('NIC, email or mobile number',
-                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _nicController,
-                              decoration: _inputDecoration('Enter NIC, email or +94 mobile'),
-                              validator: (v) => (v == null || v.trim().isEmpty)
-                                  ? 'This field is required' : null,
-                            ),
-                            const SizedBox(height: 16),
-
-                            const Text('Password',
-                                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _passwordController,
-                              obscureText: _obscurePassword,
-                              decoration: _inputDecoration('Enter password').copyWith(
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    color: Colors.grey,
-                                  ),
-                                  onPressed: () => setState(
-                                      () => _obscurePassword = !_obscurePassword),
-                                ),
-                              ),
-                              validator: (v) => (v == null || v.isEmpty)
-                                  ? 'Password is required' : null,
-                            ),
-
-                            if (_errorMessage != null) ...[
-                              const SizedBox(height: 12),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.red.shade200),
-                                ),
-                                child: Row(children: [
-                                  Icon(Icons.warning_amber_rounded,
-                                      color: Colors.red.shade600, size: 18),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(_errorMessage!,
-                                        style: TextStyle(
-                                            color: Colors.red.shade700, fontSize: 13)),
-                                  ),
-                                ]),
-                              ),
-                            ],
-
-                            const SizedBox(height: 20),
-
-                            SizedBox(
-                              width: double.infinity, height: 50,
-                              child: ElevatedButton(
-                                onPressed: _isLoading ? null : _handleLogin,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1565C0),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                ),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        width: 22, height: 22,
-                                        child: CircularProgressIndicator(
-                                            color: Colors.white, strokeWidth: 2.5))
-                                    : const Text('Log In',
-                                        style: TextStyle(
-                                            fontSize: 16, fontWeight: FontWeight.w600)),
-                              ),
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            SizedBox(
-                              width: double.infinity, height: 50,
-                              child: OutlinedButton(
-                                onPressed: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => const RegisterScreen()),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: const Color(0xFF1565C0),
-                                  side: const BorderSide(color: Color(0xFF1565C0)),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                ),
-                                child: const Text('Create Account',
-                                    style: TextStyle(
-                                        fontSize: 16, fontWeight: FontWeight.w600)),
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
-                            const Center(
-                              child: Text('Successful login opens OPD Search.',
-                                  style: TextStyle(color: Colors.grey, fontSize: 12)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            ]),
+          ),
         ),
       ),
     );
