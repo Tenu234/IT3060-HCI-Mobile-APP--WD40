@@ -11,7 +11,7 @@ class AuthService {
 
   // ─── Mock users for testing all 4 roles ───────────────────────────────────
   static final List<Map<String, String>> _mockUsers = [
-    {'email': 'prabodaweerasooriya62@gmail.com', 'password': '123456', 'role': 'patient', 'name': 'Praboda Weerasooriya', 'id': '1'},
+    {'email': 'patient@test.com',  'password': '123456', 'role': 'patient', 'name': 'Sam Patient',  'id': '1'},
     {'email': 'doctor@test.com',   'password': '123456', 'role': 'doctor',  'name': 'Dr. Smith',    'id': '2'},
     {'email': 'nurse@test.com',    'password': '123456', 'role': 'nurse',   'name': 'Nurse Anna',   'id': '3'},
     {'email': 'admin@test.com',    'password': '123456', 'role': 'admin',   'name': 'Admin Root',   'id': '4'},
