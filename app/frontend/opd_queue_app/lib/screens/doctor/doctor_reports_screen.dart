@@ -368,9 +368,7 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
       decoration: DoctorTheme.cardDecoration(
         borderColor: DoctorTheme.border,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: ListTile(
+      child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         leading: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -410,7 +408,6 @@ class _DoctorReportsScreenState extends State<DoctorReportsScreen> {
         trailing: const Icon(Icons.chevron_right_rounded, color: DoctorTheme.textMuted),
         onTap: () => _showCompletedDetailsModal(item),
       ),
-    ),
-  );
+    );
   }
 }

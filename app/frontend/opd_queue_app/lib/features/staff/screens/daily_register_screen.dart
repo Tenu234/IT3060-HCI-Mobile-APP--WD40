@@ -278,9 +278,7 @@ class _DailyRegisterScreenState extends State<DailyRegisterScreen> {
                             child: Container(
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: kCardDecoration(),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: ListTile(
+                            child: ListTile(
                               contentPadding:
                                   const EdgeInsets.symmetric(
                                       horizontal: 14, vertical: 8),
@@ -404,9 +402,8 @@ class _DailyRegisterScreenState extends State<DailyRegisterScreen> {
                                 ],
                               ),
                             ),
-                          ),
-                        ),
-                      );
+                          ),  // closes GestureDetector
+                          );
                         },
                       ),
                     ),
