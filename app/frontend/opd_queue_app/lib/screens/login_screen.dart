@@ -7,6 +7,7 @@ import 'dashboards/nurse_dashboard.dart';
 import 'dashboards/admin_dashboard.dart';
 import 'register_screen.dart';
 import '../patient/screens/opd_search_screen.dart';
+import '../features/staff/screens/staff_dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -58,6 +59,9 @@ class _LoginScreenState extends State<LoginScreen> {
         break;
       case 'nurse':
         dashboard = NurseDashboard(user: user);
+        break;
+      case 'staff':
+        dashboard = const StaffDashboardScreen();
         break;
       case 'admin':
         dashboard = AdminDashboard(user: user);
